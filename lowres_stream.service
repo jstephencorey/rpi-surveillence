@@ -1,9 +1,9 @@
 [Unit]
-Description=Low-res Libcamera Stream for Motion Detection
+Description=Low-res Rpicam Stream for Motion Detection
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/libcamera-vid --width 640 --height 360 --framerate 5 \
+ExecStart=/usr/bin/rpicam-vid --width 640 --height 360 --framerate 5 \
   --codec h264 --inline --listen -o tcp://127.0.0.1:8888
 Restart=always
 User=pi

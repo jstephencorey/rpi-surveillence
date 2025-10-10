@@ -7,7 +7,7 @@ echo "Creating video directories..."
 mkdir -p "$VIDEOS_DIR/buffer" "$VIDEOS_DIR/clips"
 
 echo "Installing motion config..."
-sudo apt install -y motion ffmpeg libcamera-apps
+sudo apt install -y motion ffmpeg
 sudo cp motion.conf /etc/motion/motion.conf
 sudo systemctl enable motion
 

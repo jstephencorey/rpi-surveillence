@@ -45,24 +45,12 @@ test with `rpicam-hello -t 5000`
 
 ### Set up for recording:
 
+Clone this repo into the rpi: `git clone https://github.com/jstephencorey/rpi-surveillence.git`
+Go into it with `cd rpi-surveillence`
+Make the setup file runnable with `chmod +x setup.sh`
+Run the setup `sudo ./setup.sh`
+reboot with `sudo reboot`
 
-
-
-
-
-
-#### Potential troubleshooting:
-
-if `dpkg -l | grep raspberrypi`
-doesn't have:
-  `raspberrypi-bootloader`
-  `raspberrypi-kernel`
-then run:
-`sudo apt install -y raspberrypi-kernel raspberrypi-bootloader`
-and reboot (`sudo reboot`)
-then check that `uname -a` has something with "+rpt" in it.
-
-then reinstall `sudo apt install -y libcamera-apps`
 
 
 

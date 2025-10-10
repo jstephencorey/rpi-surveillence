@@ -8,11 +8,11 @@ MAX_SEGMENTS=60
 mkdir -p "$BUFFER_DIR" "$CLIP_DIR"
 
 # Start high-res recording
-libcamera-vid -t 0 --inline --segment $((SEGMENT_LENGTH*1000)) \
+rpicam-vid -t 0 --inline --segment $((SEGMENT_LENGTH*1000)) \
   -o "$BUFFER_DIR/segment_%05d.h264" \
   --width 1920 --height 1080 --framerate 30 --codec h264 &
 VID_PID=$!
-echo "Started libcamera-vid PID $VID_PID"
+echo "Started rpicam-vid PID $VID_PID"
 
 while true; do
   sleep 2
