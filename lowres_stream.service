@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 ExecStart=/usr/bin/rpicam-vid --width 640 --height 360 --framerate 5 \
-  --codec h264 --inline --listen -o tcp://127.0.0.1:8888
+  --codec h264 --inline --listen -o tcp://127.0.0.1:8888 --timeout 0
 Restart=always
 User=pi
 

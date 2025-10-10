@@ -23,7 +23,6 @@ while true; do
   # Motion detected?
   if [ -f /tmp/motion.flag ]; then
     echo "Motion detected!"
-    rm /tmp/motion.flag
 
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
     OUTPUT="$CLIP_DIR/clip_$TIMESTAMP.mp4"

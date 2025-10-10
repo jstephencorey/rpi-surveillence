@@ -47,7 +47,7 @@ test with `rpicam-hello -t 5000`
 
 Clone this repo into the rpi: `git clone https://github.com/jstephencorey/rpi-surveillence.git`
 Go into it with `cd rpi-surveillence`
-Make the setup file runnable with `chmod +x setup.sh`
+Make the setup file runnable with `chmod +x setup.sh capture_manager.sh`
 Run the setup `sudo ./setup.sh`
 reboot with `sudo reboot`
 
