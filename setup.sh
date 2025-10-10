@@ -4,7 +4,7 @@ set -e
 VIDEOS_DIR="/home/piuser/videos"
 
 echo "Creating video directories..."
-mkdir -p "$VIDEOS_DIR/buffer" "$VIDEOS_DIR/clips"
+mkdir -p -m 755 "$VIDEOS_DIR/buffer" "$VIDEOS_DIR/clips"
 
 echo "Installing motion config..."
 sudo apt install -y motion ffmpeg
