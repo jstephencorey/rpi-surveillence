@@ -1,0 +1,12 @@
+[Unit]
+Description=Pi Trailcam Video Capture
+After=network.target
+
+[Service]
+ExecStart=/home/piuser/rpi-surveillence/capture_manager.sh
+WorkingDirectory=/home/piuser/rpi-surveillence
+Restart=always
+User=piuser
+
+[Install]
+WantedBy=multi-user.target
