@@ -1,10 +1,11 @@
 #!/bin/bash
-VIDEOS_DIR="/home/piuser/videos/buffer"
-SEGMENT_LENGTH=10  # seconds
+VIDEOS_DIR="/home/piuser/videos"
+BUFFER_DIR="$VIDEOS_DIR/buffer"
+SEGMENT_LENGTH=10
 
-mkdir -p "$VIDEOS_DIR"
+mkdir -p "$BUFFER_DIR"
 
-rpicam-vid -t 0 --inline \
-  --segment $((SEGMENT_LENGTH*1000)) \
-  -o "$VIDEOS_DIR/segment_%06d.h264" \
+# Start high-res recording
+rpicam-vid -t 0 --inline --segment $((SEGMENT_LENGTH*1000)) \
+  -o "$BUFFER_DIR/segment_%05d.h264" \
   --width 1920 --height 1080 --framerate 30 --codec h264
