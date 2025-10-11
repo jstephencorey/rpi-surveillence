@@ -3,10 +3,7 @@ Description=Pi Surveillence Camera Video Capture
 After=network.target
 
 [Service]
-ExecStart=rpicam-vid -t 0 --inline \
-  --segment $((SEGMENT_LENGTH*1000)) \
-  -o "/home/piuser/videos/buffer/segment_%06d.h264" \
-  --width 1920 --height 1080 --framerate 30 --codec h264
+ExecStart=/home/piuser/rpi-surveillence/pi-cam-record.sh
 WorkingDirectory=/home/piuser
 Restart=always
 User=piuser
