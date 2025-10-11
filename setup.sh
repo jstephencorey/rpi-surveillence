@@ -7,11 +7,8 @@ echo "Creating video directories..."
 mkdir -p -m 755 "$VIDEOS_DIR/buffer" "$VIDEOS_DIR/clips"
 sudo chown -R piuser:piuser /home/piuser/videos
 
-echo "Installing stuff..."
-sudo apt install -y ffmpeg python3-pip
-
-echo "Installing Python dependencies..."
-sudo pip3 install -r /home/piuser/rpi-surveillence/requirements.txt
+echo "Installing ffmpeg and python libraries..."
+sudo apt install -y ffmpeg python3-opencv python3-numpy
 
 echo "Installing systemd services..."
 sudo cp /home/piuser/rpi-surveillence/camera.service /etc/systemd/system/camera.service
