@@ -84,8 +84,8 @@ def save_clip(segments):
     """Concatenate motion segments into a single mp4 clip."""
     if not segments:
         return
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    clip_name = f"clip_{timestamp}.mp4"
+    first_clip_number = os.path.basename(segments[0]).replace('segment_', '').replace('.h264','')
+    clip_name = f"clip_{first_clip_number}.mp4"
     clip_path = os.path.join(CLIP_DIR, clip_name)
 
     try:
@@ -117,14 +117,16 @@ def save_clip(segments):
 logger.info("Starting motion processor loop...")
 while True:
     try:
-        segments = sorted(os.listdir(BUFFER_DIR))
+        segments = sorted(os.listdir(BUFFER_DIR)) #assumes a sortable order
         # Skip already processed
         segments = [s for s in segments if s not in processed_segments]
         if not segments:
+            logger.debug("no available segments to process, sleeping")
             time.sleep(SLEEP_INTERVAL)
             continue
 
         for i, seg in enumerate(segments):
+            logger.debug(f"processing segment #{i}, {seg}")
             seg_path = os.path.join(BUFFER_DIR, seg)
             # Always skip last one (may still be writing)
             if i == len(segments) - 1:
@@ -132,9 +134,11 @@ while True:
 
             motion = detect_motion(seg_path)
             if motion:
+                logger.debug(f"Adding segment #{i}, {seg} to the motion group")
                 motion_group.append(seg_path)
             else:
                 if motion_group:
+                    logger.debug(f"saving all current motion group segments to a clip")
                     save_clip(motion_group)
                     motion_group = []
                 else:

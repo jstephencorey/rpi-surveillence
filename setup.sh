@@ -16,6 +16,10 @@ sudo cp /home/piuser/rpi-surveillence/motion_postprocess.service /etc/systemd/sy
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now camera.service
-sudo systemctl enable --now motion_postprocess.service
+# sudo systemctl enable --now motion_postprocess.service
+
+# to stop and disable a service for testing:
+# sudo systemctl stop motion_postprocess.service
+# sudo systemctl disable motion_postprocess.service
 
 echo "✅ Setup complete. Recording should start now and at boot."
