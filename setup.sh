@@ -15,8 +15,8 @@ sudo cp /home/piuser/rpi-surveillence/camera.service /etc/systemd/system/camera.
 sudo cp /home/piuser/rpi-surveillence/motion_postprocess.service /etc/systemd/system/motion_postprocess.service
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now camera.service
-# sudo systemctl enable --now motion_postprocess.service
+sudo systemctl enable --now capture.service
+sudo systemctl enable --now lores.service
 
 # to stop and disable a service for testing:
 # sudo systemctl stop motion_postprocess.service
