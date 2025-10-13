@@ -12,7 +12,7 @@ LOG_FILE = "/home/piuser/videos/logs/postprocess.log"
 
 LQ_WIDTH = 640
 LQ_HEIGHT = 360
-LQ_FPS = 5
+LQ_FPS = 3
 
 # os.makedirs(HQ_DIR, exist_ok=True)
 os.makedirs(LORES_DIR, exist_ok=True)
@@ -36,9 +36,13 @@ def process_file(file_path):
     cmd = [
         "ffmpeg", "-y",
         "-i", file_path,
+        "-threads", "1",
         "-vf", f"scale={LQ_WIDTH}:{LQ_HEIGHT},fps={LQ_FPS}",
-        "-c:v", "libx264",
-        "-preset", "veryfast",
+        "-c:v", "h264_v4l2m2m",
+        "-b:v", "200k", #video bitrate
+        "-g", "5", # short GOP for more I-frames, helps per-frame comparisons
+        "-bf", "0", # disable B-frames (simpler decoding)
+        "-an", #  no audio
         "-crf", "32", #32 means low quality, which is fine for this.
         output_lores
     ]
