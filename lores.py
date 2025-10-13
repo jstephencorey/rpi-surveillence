@@ -43,10 +43,10 @@ def process_file(file_path):
         "-g", "5", # short GOP for more I-frames, helps per-frame comparisons
         "-bf", "0", # disable B-frames (simpler decoding)
         "-an", #  no audio
-        "-crf", "32", #32 means low quality, which is fine for this.
         output_lores
     ]
 
+    logging.debug(f"Beginning to generate lores version of {base}")
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         logging.info(f"Generated lores version for {base}")

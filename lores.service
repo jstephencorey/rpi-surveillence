@@ -1,5 +1,5 @@
 [Unit]
-Description=Raspberry Pi Video Capture
+Description=Raspberry Pi Video Lores conversion
 After=capture.service
 
 [Service]
