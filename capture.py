@@ -10,7 +10,7 @@ LOG_FILE = "/home/piuser/videos/logs/capture.log"
 HQ_WIDTH = "1920"
 HQ_HEIGHT = "1080"
 HQ_FRAMERATE = "30"
-_SECS_PER_SEGMENT = 10 # N seconds
+_SECS_PER_SEGMENT = 30 # N seconds
 HQ_SEGMENT = str(_SECS_PER_SEGMENT*1000) # in milliseconds
 
 os.makedirs(BUFFER_DIR, exist_ok=True)

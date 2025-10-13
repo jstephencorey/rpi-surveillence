@@ -6,14 +6,16 @@ import logging
 import shutil
 
 BUFFER_DIR = "/home/piuser/videos/buffer"
-CLIP_DIR = "/home/piuser/videos/clips"
+# HQ_DIR = "/home/piuser/videos/hq" #implement eventually
+LORES_DIR = "/home/piuser/videos/lores"
 LOG_FILE = "/home/piuser/videos/logs/postprocess.log"
 
 LQ_WIDTH = 640
 LQ_HEIGHT = 360
 LQ_FPS = 5
 
-os.makedirs(CLIP_DIR, exist_ok=True)
+# os.makedirs(HQ_DIR, exist_ok=True)
+os.makedirs(LORES_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 logging.basicConfig(filename=LOG_FILE,
@@ -23,17 +25,17 @@ logging.basicConfig(filename=LOG_FILE,
 def process_file(file_path):
     base = os.path.basename(file_path)
     name, _ = os.path.splitext(base)
-    output_hq = os.path.join(CLIP_DIR, base)
-    output_lores = os.path.join(CLIP_DIR, f"{name}_lores.mp4")
+    # output_hq = os.path.join(CLIP_DIR, base)
+    output_lores = os.path.join(LORES_DIR, f"{name}_lores.mp4")
 
     # Move the original segment into clips
-    shutil.move(file_path, output_hq)
-    logging.info(f"Moved {base} to clips directory.")
+    # shutil.move(file_path, output_hq)
+    # logging.info(f"Moved {base} to clips directory.")
 
     # Generate lores version
     cmd = [
         "ffmpeg", "-y",
-        "-i", output_hq,
+        "-i", file_path,
         "-vf", f"scale={LQ_WIDTH}:{LQ_HEIGHT},fps={LQ_FPS}",
         "-c:v", "libx264",
         "-preset", "veryfast",
