@@ -32,7 +32,6 @@ def main():
         "--framerate", HQ_FRAMERATE,
         "--segment", HQ_SEGMENT,  # milliseconds per file
         "--output", segment_pattern,
-        "--segment-wrap", "0",
         "--timeout", "0",  # run indefinitely
         "--codec", "h264"
     ]
