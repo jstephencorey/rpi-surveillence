@@ -11,8 +11,8 @@ echo "Installing ffmpeg and python libraries..."
 sudo apt install -y ffmpeg python3-opencv python3-numpy
 
 echo "Installing systemd services..."
-sudo cp /home/piuser/rpi-surveillence/camera.service /etc/systemd/system/camera.service
-sudo cp /home/piuser/rpi-surveillence/motion_postprocess.service /etc/systemd/system/motion_postprocess.service
+sudo cp /home/piuser/rpi-surveillence/capture.service /etc/systemd/system/capture.service
+sudo cp /home/piuser/rpi-surveillence/lores.service /etc/systemd/system/lores.service
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now capture.service
