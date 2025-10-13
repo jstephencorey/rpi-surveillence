@@ -10,8 +10,8 @@ BUFFER_DIR = "/home/piuser/videos/buffer"
 LORES_DIR = "/home/piuser/videos/lores"
 LOG_FILE = "/home/piuser/videos/logs/postprocess.log"
 
-LQ_WIDTH = 640
-LQ_HEIGHT = 360
+LQ_WIDTH = 320
+LQ_HEIGHT = 180
 LQ_FPS = 3
 
 # os.makedirs(HQ_DIR, exist_ok=True)
