@@ -1,0 +1,218 @@
+ffmpeg -y \
+  -i /home/piuser/videos/buffer/segment_00000.h264 \
+  -threads 1 \
+  -vf "scale=320:180,fps=2" \
+  -c:v h264_v4l2m2m \
+  -b:v 200k \
+  -g 5 \
+  -bf 0 \
+  -an \
+  /home/piuser/videos/lores/test_segment_00000_lores_3.mp4
+
+
+ffmpeg -y -i /home/piuser/videos/buffer/segment_00000.h264 -threads 1 -vf "scale=320:180,fps=3" -c:v libx264 -preset ultrafast -qp 35 -g 5 -bf 0 -an /home/piuser/videos/lores/test_segment_00000_lores_2.mp4
+
+
+ffmpeg -y -i /home/piuser/videos/buffer/segment_00000.h264 \
+  -threads 1 \
+  -vf "scale=320:180,fps=3,format=gray" \
+  -c:v mjpeg_v4l2m2m \
+  -q:v 8 \
+  -an \
+  /home/piuser/videos/lores/test_segment_00000_motion.mkv
+
+
+ffmpeg -threads 1 -i /home/piuser/videos/buffer/segment_00001.h264 \
+  -vf "scale=160:90,fps=3,format=gray,select='gt(scene,0.1)',metadata=print" -f null -
+
+  ffmpeg -hwaccel v4l2_request -i /home/piuser/videos/buffer/segment_00001.h264 -f null -
+
+ffmpeg -i /home/piuser/videos/buffer/segment_00001.h264 -vf "select='not(mod(n,3))',setpts=N/FRAME_RATE/TB" -vsync vfr output_skipped.mp4
+
+for t in 0 5 10 15 20; do
+    ffmpeg -ss $t -i /home/piuser/videos/buffer/segment_00001.h264 -frames:v 1 frames/frame_${t}.jpg
+done
+
+
+echo segment_{00000..03990}.h264
+rm -f segment_{00100..03990}.h264
+
+
+# Basic motion test config
+daemon off
+process_id_file /tmp/motion.pid
+
+# Path to test video file
+videodevice /home/piuser/videos/buffer/segment_00001.h264
+
+# Use input video instead of camera
+v4l2_palette 17
+
+# Image size matches your lores size
+width 1920
+height 1080
+
+# Framerate of input
+framerate 30
+
+# Sensitivity tuning
+threshold 1000      # lower = more sensitive
+noise_level 32
+noise_tune on
+
+# Don’t save new video files, we just want motion logs
+output_pictures off
+ffmpeg_output_movies off
+event_gap 0
+
+# Show output in console
+log_level 6
+
+
+import cv2
+
+DOWNSAMPLE_WIDTH = 320
+DOWNSAMPLE_HEIGHT = 240
+
+video = cv2.VideoCapture("/home/piuser/videos/buffer/segment_00001.h264")
+ret, frame1 = video.read()
+frame1 = cv2.resize(frame1, (DOWNSAMPLE_WIDTH, DOWNSAMPLE_HEIGHT))
+if not ret:
+    print(f"Failed to read first frame")
+    video.release()
+ret, frame2 = video.read()
+frame2 = cv2.resize(frame2, (DOWNSAMPLE_WIDTH, DOWNSAMPLE_HEIGHT))
+frame_num = 0
+
+while ret:
+    print(f"Now processing frame {frame_num}")
+    # diff = cv2.absdiff(frame1, frame2)
+    # gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+    
+    # blur = cv2.GaussianBlur(gray, (5,5), 0)
+    # _, thresh = cv2.threshold(blur, 25, 255, cv2.THRESH_BINARY)
+    # motion_pixels = cv2.countNonZero(thresh)
+
+    # if motion_pixels > 500:  # sensitivity threshold
+    #     print("Motion detected:", motion_pixels)
+    # else:
+    #     print("Motion not detected")
+    frame1 = frame2
+    ret, frame2 = video.read()
+    if not ret:
+        print(f"Failed to read frame")
+        video.release()
+        break
+    frame2 = cv2.resize(frame2, (DOWNSAMPLE_WIDTH, DOWNSAMPLE_HEIGHT))
+    frame_num += 1
+
+video.release()
+
+
+
+
+
+
+
+
+import os
+import cv2
+import numpy as np
+import subprocess
+import tempfile
+import logging
+
+BUFFER_DIR = "/home/piuser/videos/buffer"
+LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
+FRAMES_TO_SAMPLE = 5
+MOTION_THRESHOLD = 50000  # tune this number higher/lower depending on sensitivity
+
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s [%(levelname)s] %(message)s",
+                    handlers=[
+                        logging.FileHandler(LOG_FILE),
+                        logging.StreamHandler()  # ensures output appears in journalctl/systemd logs
+                    ])
+
+def extract_sample_frames(input_path):
+    """Rewrap .h264 to .mp4 and extract 5 sample frames as np.array list."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logging.debug("extracting sample frames")
+        temp_mp4 = os.path.join(tmpdir, "temp.mp4")
+
+        # Step 1: Rewrap to MP4 (no re-encode)
+        cmd_wrap = ["ffmpeg", "-hide_banner", "-loglevel", "error",
+                    "-f", "h264", "-i", input_path, "-c", "copy", "-y", temp_mp4]
+        subprocess.run(cmd_wrap, check=True)
+
+        # Step 2: Determine duration (seconds)
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", temp_mp4],
+            capture_output=True, text=True
+        )
+        try:
+            duration = float(result.stdout.strip())
+        except ValueError:
+            logging.warning(f"Could not read duration for {input_path}")
+            return []
+
+        # Step 3: Extract sample frames
+        sample_times = np.linspace(0, duration, FRAMES_TO_SAMPLE, endpoint=False)
+        frames = []
+
+        for i, t in enumerate(sample_times):
+            frame_path = os.path.join(tmpdir, f"frame_{i}.jpg")
+            cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error",
+                   "-ss", str(t), "-i", temp_mp4, "-frames:v", "1",
+                   "-q:v", "4", "-y", frame_path]
+            subprocess.run(cmd, check=True)
+
+            frame = cv2.imread(frame_path, cv2.IMREAD_GRAYSCALE)
+            if frame is not None:
+                frames.append(frame)
+
+        return frames
+
+
+def detect_motion(frames):
+    """Return True if frame-to-frame difference exceeds threshold."""
+    logging.debug("detecting motion")
+    if len(frames) < 2:
+        return False
+
+    diffs = []
+    for a, b in zip(frames, frames[1:]):
+        diff = cv2.absdiff(a, b)
+        diffs.append(np.sum(diff))
+    avg_diff = np.mean(diffs)
+    return avg_diff > MOTION_THRESHOLD
+
+
+def process_file(file_path):
+    base = os.path.basename(file_path)
+    logging.info(f"Processing {base}")
+
+    try:
+        frames = extract_sample_frames(file_path)
+        if not frames:
+            logging.warning(f"No frames extracted from {base}")
+            return
+
+        if detect_motion(frames):
+            logging.info(f"Motion detected in {base}")
+        else:
+            logging.info(f"No motion in {base}")
+    except subprocess.CalledProcessError:
+        logging.error(f"FFmpeg failed on {base}")
+    except Exception as e:
+        logging.exception(f"Error processing {base}: {e}")
+
+
+if __name__ == "__main__":
+    for filename in sorted(os.listdir(BUFFER_DIR)):
+        if filename.lower().endswith(".h264"):
+            path = os.path.join(BUFFER_DIR, filename)
+            process_file(path)
+

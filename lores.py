@@ -19,7 +19,7 @@ os.makedirs(LORES_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 logging.basicConfig(filename=LOG_FILE,
-                    level=logging.INFO,
+                    level=logging.DEBUG,
                     format="%(asctime)s [%(levelname)s] %(message)s")
 
 def process_file(file_path):
