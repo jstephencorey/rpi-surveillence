@@ -9,7 +9,8 @@ LOG_FILE = "/home/piuser/videos/logs/capture.log"
 
 HQ_WIDTH = "1920"
 HQ_HEIGHT = "1080"
-HQ_FRAMERATE = "30"
+HQ_FRAMERATE = 30
+HQ_INTRA = HQ_FRAMERATE * 3 # record an I-frame every 2 seconds, used for fast decoding of frames for ffmpeg to later extract. 
 _SECS_PER_SEGMENT = 30 # N seconds
 HQ_SEGMENT = str(_SECS_PER_SEGMENT*1000) # in milliseconds
 
@@ -29,9 +30,10 @@ def main():
         "--inline",
         "--width", HQ_WIDTH,
         "--height", HQ_HEIGHT,
-        "--framerate", HQ_FRAMERATE,
+        "--framerate", str(HQ_FRAMERATE),
         "--segment", HQ_SEGMENT,  # milliseconds per file
         "--output", segment_pattern,
+        "--intra", str(HQ_INTRA),
         "--timeout", "0",  # run indefinitely
         "--codec", "h264"
     ]

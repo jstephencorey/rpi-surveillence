@@ -16,7 +16,7 @@ SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
 CHANGE_RATIO=0.001
 FLUSH_N_CLIPS = 32 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
-CLIP_DURATION = 10.0
+CLIP_DURATION = 30.0
 CLIP_FPS = 30
 CLIP_FRAME_SPEED = 0.0339 # (slightly more than 1/CLIP_FPS)
 
@@ -42,19 +42,12 @@ def extract_sample_frames(input_path):
     logging.debug(f"Extracting sample frames (optimized) from {input_path}")
     with tempfile.TemporaryDirectory() as tmpdir:
     # tmpdir = "S:\\Dev\\rpi-surveillence\\buffer\\buffer_tmp"
-
-
-        # Build select filter to pick N evenly spaced times
-        select_expr = "+".join([
-            f"gte(t,{t:.4f})*lt(t,{t+CLIP_FRAME_SPEED:.4f})"
-            for t in np.linspace(0, CLIP_DURATION, FRAMES_TO_SAMPLE, endpoint=False)
-        ])
-        vf_filter = f"select='{select_expr}',scale={LQ_WIDTH}:{LQ_HEIGHT},format=gray"
-
+        vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=gray"
         output_pattern = os.path.join(tmpdir, "frame_%03d.jpg")
         cmd = [
             "ffmpeg", "-hide_banner", "-loglevel", "error",
             "-i", input_path,
+            "-skip_frame", "nokey", # efficiently extract just the keyframes
             "-vf", vf_filter,
             "-vsync", "vfr",
             "-q:v", "4",              # JPEG quality
@@ -67,14 +60,12 @@ def extract_sample_frames(input_path):
 
         # Read frames back into memory
         frames = []
-        for i in range(FRAMES_TO_SAMPLE):
-            path = os.path.join(tmpdir, f"frame_{i+1:03d}.jpg")  # ffmpeg starts at 1
-            if not os.path.exists(path):
-                continue
+        for file in os.listdir(tmpdir):
+            path = os.path.join(tmpdir, file)
             frame = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
             if frame is not None:
                 frames.append(frame)
-
+        logging.debug(f"generated/read {len(frames)} frames")
         return frames
 
 def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATIO):

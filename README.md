@@ -4,7 +4,7 @@ This guide sets up a Raspberry Pi Zero 2 W (or similar Pi with a CSI camera) to 
 
 It assumes:
 
-Raspberry Pi OS Lite (Bookworm or newer)
+Raspberry Pi OS Lite (Bookworm or newer) (you can do 64 bit, apparently it's slightly better for this.)
 
 Headless setup (SSH only, no GUI)
 

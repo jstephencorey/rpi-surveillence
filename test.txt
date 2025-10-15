@@ -36,7 +36,11 @@ done
 
 ffmpeg -i /home/piuser/videos/buffer/segment_00001.h264 -vf "select='eq(pict_type,I)+not(mod(n,50))',scale=160:90" -vsync vfr frames/frame_%02d.jpg
 
+ffmpeg -hide_banner -loglevel error -i /home/piuser/videos/buffer/segment_00008.h264 -vf "select='gte(t,0.0000)*lt(t,0.0339)+gte(t,2.0000)*lt(t,2.0339)+gte(t,4.0000)*lt(t,4.0339)+gte(t,6.0000)*lt(t,6.0339)+gte(t,8.0000)*lt(t,8.0339)',scale=160:90,format=gray" -vsync vfr -q:v 4 -y /home/piuser/videos/tmp/frame_%03d.jpg
 
+time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_test_00060.h264 -vsync vfr -q:v 4 /home/piuser/videos/tmp/keyframe_%03d.jpg
+
+time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_00018.h264 -fps_mode vfr -q:v 4 /home/piuser/videos/tmp/keyframe_%03d.jpg -y -vf scale=160:90,format=gray
 
 echo segment_{00000..03990}.h264
 rm -f segment_{00100..03990}.h264
