@@ -11,14 +11,10 @@ TMP_DIR = "./buffer/tmp"
 LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
 CLIP_DIR = "/home/piuser/videos/clips"
 
-FRAMES_TO_SAMPLE = 5
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
 CHANGE_RATIO=0.001
 FLUSH_N_CLIPS = 32 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
-CLIP_DURATION = 30.0
-CLIP_FPS = 30
-CLIP_FRAME_SPEED = 0.0339 # (slightly more than 1/CLIP_FPS)
 
 LQ_WIDTH, LQ_HEIGHT = 160, 90  # resize early in ffmpeg
 
@@ -43,7 +39,7 @@ def extract_sample_frames(input_path):
     with tempfile.TemporaryDirectory() as tmpdir:
     # tmpdir = "S:\\Dev\\rpi-surveillence\\buffer\\buffer_tmp"
         vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=gray"
-        output_pattern = os.path.join(tmpdir, "frame_%03d.jpg")
+        output_pattern = os.path.join(tmpdir, "frame_%04d.jpg")
         cmd = [
             "ffmpeg", "-hide_banner", "-loglevel", "error",
             "-i", input_path,
