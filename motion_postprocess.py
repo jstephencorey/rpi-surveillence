@@ -42,7 +42,7 @@ def extract_sample_frames(input_path):
     output_pattern = os.path.join(TMP_DIR, "frame_%04d.jpg")
     cmd = [
         "ffmpeg", "-hide_banner", 
-        "-loglevel", "warn",
+        "-loglevel", "warning",
         "-skip_frame", "nokey", # efficiently extract just the keyframes
         "-i", input_path,
         "-vf", vf_filter,
