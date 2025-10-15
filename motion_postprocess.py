@@ -41,11 +41,12 @@ def extract_sample_frames(input_path):
     vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=gray"
     output_pattern = os.path.join(TMP_DIR, "frame_%04d.jpg")
     cmd = [
-        "ffmpeg", "-hide_banner", "-loglevel", "error",
-        "-i", input_path,
+        "ffmpeg", "-hide_banner", 
+        "-loglevel", "warn",
         "-skip_frame", "nokey", # efficiently extract just the keyframes
+        "-i", input_path,
         "-vf", vf_filter,
-        "-vsync", "vfr",
+        "-fps_mode", "vfr",
         "-q:v", "4",              # JPEG quality
         "-y", output_pattern
     ]
