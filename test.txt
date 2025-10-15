@@ -34,6 +34,10 @@ for t in 0 5 10 15 20; do
 done
 
 
+ffmpeg -i /home/piuser/videos/buffer/segment_00001.h264 -vf "select='eq(pict_type,I)+not(mod(n,50))',scale=160:90" -vsync vfr frames/frame_%02d.jpg
+
+
+
 echo segment_{00000..03990}.h264
 rm -f segment_{00100..03990}.h264
 
