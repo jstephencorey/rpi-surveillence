@@ -13,16 +13,16 @@ sudo apt install -y ffmpeg python3-opencv python3-numpy
 echo "Stopping/disabling old services..." #todo remove this eventually
 sudo systemctl disable capture.service
 sudo systemctl stop capture.service
-sudo systemctl disable lores.service
-sudo systemctl stop lores.service
+sudo systemctl disable motion_postprocess.service
+sudo systemctl stop motion_postprocess.service
 
 echo "Installing systemd services..."
 sudo cp /home/piuser/rpi-surveillence/capture.service /etc/systemd/system/capture.service
-sudo cp /home/piuser/rpi-surveillence/lores.service /etc/systemd/system/lores.service
+sudo cp /home/piuser/rpi-surveillence/motion_postprocess.service /etc/systemd/system/motion_postprocess.service
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now capture.service
-sudo systemctl enable --now lores.service
+sudo systemctl enable --now motion_postprocess.service
 
 # to stop and disable a service for testing:
 # sudo systemctl stop motion_postprocess.service

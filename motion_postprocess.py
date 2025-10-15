@@ -6,77 +6,36 @@ import tempfile
 import logging
 import time
 
-# BUFFER_DIR = "/home/piuser/videos/buffer"
-BUFFER_DIR = "./buffer/buffer_test"
-BUFFER_DIR = "S:\\Dev\\rpi-surveillence\\buffer\\buffer_test"
-TMP_DIR = "./buffer/buffer_tmp"
-# BUFFER_DIR = "./buffer"
-# LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
+BUFFER_DIR = "/home/piuser/videos/buffer"
+TMP_DIR = "./buffer/tmp"
+LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
+CLIP_DIR = "/home/piuser/videos/clips"
+
 FRAMES_TO_SAMPLE = 5
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
 CHANGE_RATIO=0.001
 FLUSH_N_CLIPS = 32 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
-
 CLIP_DURATION = 10.0
 CLIP_FPS = 30
-CLIP_FRAME_SPEED = 0.0339
+CLIP_FRAME_SPEED = 0.0339 # (slightly more than 1/CLIP_FPS)
 
 LQ_WIDTH, LQ_HEIGHT = 160, 90  # resize early in ffmpeg
 
-# CLIP_DIR = "/buffer/clips_test"
-CLIP_DIR = "S:\\Dev\\rpi-surveillence\\buffer\\clips_test"
+
 os.makedirs(CLIP_DIR, exist_ok=True)
 os.makedirs(BUFFER_DIR, exist_ok=True)
 os.makedirs(TMP_DIR, exist_ok=True)
-# os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 logging.basicConfig(level=logging.DEBUG,
                     format="%(asctime)s [%(levelname)s] %(message)s",
                     handlers=[
-                        # logging.FileHandler(LOG_FILE),
+                        logging.FileHandler(LOG_FILE),
                         logging.StreamHandler()  # ensures output appears in journalctl/systemd logs
                     ])
+
 logging.debug("test")
-# def extract_sample_frames(input_path):
-#     """Rewrap .h264 to .mp4 and extract 5 sample frames as np.array list."""
-#     with tempfile.TemporaryDirectory() as tmpdir:
-#         logging.debug("extracting sample frames")
-#         temp_mp4 = os.path.join(tmpdir, "temp.mp4")
-
-#         # Step 1: Rewrap to MP4 (no re-encode)
-#         cmd_wrap = ["ffmpeg", "-hide_banner", "-loglevel", "error",
-#                     "-f", "h264", "-i", input_path, "-c", "copy", "-y", temp_mp4]
-#         subprocess.run(cmd_wrap, check=True)
-
-#         # Step 2: Determine duration (seconds)
-#         result = subprocess.run(
-#             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-#              "-of", "default=noprint_wrappers=1:nokey=1", temp_mp4],
-#             capture_output=True, text=True
-#         )
-#         try:
-#             duration = float(result.stdout.strip())
-#         except ValueError:
-#             logging.warning(f"Could not read duration for {input_path}")
-#             return []
-
-#         # Step 3: Extract sample frames
-#         sample_times = np.linspace(0, duration, FRAMES_TO_SAMPLE, endpoint=False)
-#         frames = []
-
-#         for i, t in enumerate(sample_times):
-#             frame_path = os.path.join(tmpdir, f"frame_{i}.jpg")
-#             cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error",
-#                    "-ss", str(t), "-i", temp_mp4, "-frames:v", "1",
-#                    "-q:v", "4", "-y", frame_path]
-#             subprocess.run(cmd, check=True)
-
-#             frame = cv2.imread(frame_path, cv2.IMREAD_GRAYSCALE)
-#             if frame is not None:
-#                 frames.append(frame)
-
-#         return frames
 
 def extract_sample_frames(input_path):
     """Efficiently extract sample frames directly from .h264 via ffmpeg pipe."""
@@ -118,23 +77,6 @@ def extract_sample_frames(input_path):
 
         return frames
 
-len(extract_sample_frames("S:\\Dev\\rpi-surveillence\\buffer\\buffer_test2\\segment_00021.h264"))
-# def detect_motion(frames): # keeping this here for reference
-#     """Return True if frame-to-frame difference exceeds threshold."""
-#     # logging.debug("detecting motion")
-#     if len(frames) < 2:
-#         return False
-
-#     frames = [cv2.GaussianBlur(cv2.resize(f, (0,0), fx=0.25, fy=0.25), (5,5), 0) for f in frames]
-
-#     diffs = []
-#     for a, b in zip(frames, frames[1:]):
-#         diff = cv2.absdiff(a, b)
-#         diffs.append(np.sum(diff))
-#     avg_diff = np.mean(diffs)
-#     logging.info(f"motion diff: {avg_diff:,}")
-#     return avg_diff > MOTION_THRESHOLD
-
 def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATIO):
     """
     Detect motion based on % of pixels with large changes between frames.
@@ -161,33 +103,6 @@ def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATI
     avg_ratio = np.mean(ratios)
     logging.info(f"motion pixel ratio: {avg_ratio:.6f}")
     return avg_ratio > change_ratio
-# def process_file(file_path):
-#     base = os.path.basename(file_path)
-#     # logging.info(f"Processing {base}")
-
-#     try:
-#         frames = extract_sample_frames(file_path)
-#         if not frames:
-#             logging.warning(f"No frames extracted from {base}")
-#             return
-
-#         if detect_motion(frames):
-#             logging.info(f"Motion detected in {base}")
-#             pass
-#         else:
-#             logging.info(f"No motion in {base}")
-#     except subprocess.CalledProcessError:
-#         logging.error(f"FFmpeg failed on {base}")
-#     except Exception as e:
-#         logging.exception(f"Error processing {base}: {e}")
-
-# for i,filename in enumerate(sorted(os.listdir(BUFFER_DIR))):
-#     if filename.lower().endswith(".h264"):
-#         path = os.path.join(BUFFER_DIR, filename)
-#         logging.info(path)
-#         process_file(path)
-#     if i > 20:
-#         break
 
 # === Save clip ===
 def save_clip(segments):
@@ -226,7 +141,6 @@ def save_clip(segments):
 
     except Exception as e:
         logging.exception(f"Error while saving clip: {e}")
-
 
 
 if __name__ == "__main__":
