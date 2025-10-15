@@ -7,7 +7,7 @@ import logging
 import time
 
 BUFFER_DIR = "/home/piuser/videos/buffer"
-TMP_DIR = "./buffer/tmp"
+TMP_DIR = "/home/piuser/videos/tmp"
 LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
 CLIP_DIR = "/home/piuser/videos/clips"
 
@@ -36,33 +36,34 @@ logging.debug("test")
 def extract_sample_frames(input_path):
     """Efficiently extract sample frames directly from .h264 via ffmpeg pipe."""
     logging.debug(f"Extracting sample frames (optimized) from {input_path}")
-    with tempfile.TemporaryDirectory() as tmpdir:
+    # with tempfile.TemporaryDirectory() as tmpdir:
     # tmpdir = "S:\\Dev\\rpi-surveillence\\buffer\\buffer_tmp"
-        vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=gray"
-        output_pattern = os.path.join(tmpdir, "frame_%04d.jpg")
-        cmd = [
-            "ffmpeg", "-hide_banner", "-loglevel", "error",
-            "-i", input_path,
-            "-skip_frame", "nokey", # efficiently extract just the keyframes
-            "-vf", vf_filter,
-            "-vsync", "vfr",
-            "-q:v", "4",              # JPEG quality
-            "-y", output_pattern
-        ]
+    vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=gray"
+    output_pattern = os.path.join(TMP_DIR, "frame_%04d.jpg")
+    cmd = [
+        "ffmpeg", "-hide_banner", "-loglevel", "error",
+        "-i", input_path,
+        "-skip_frame", "nokey", # efficiently extract just the keyframes
+        "-vf", vf_filter,
+        "-vsync", "vfr",
+        "-q:v", "4",              # JPEG quality
+        "-y", output_pattern
+    ]
 
-        # logging.debug(cmd)
+    # logging.debug(cmd)
 
-        subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True)
 
-        # Read frames back into memory
-        frames = []
-        for file in os.listdir(tmpdir):
-            path = os.path.join(tmpdir, file)
-            frame = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-            if frame is not None:
-                frames.append(frame)
-        logging.debug(f"generated/read {len(frames)} frames")
-        return frames
+    # Read frames back into memory
+    frames = []
+    for file in os.listdir(TMP_DIR):
+        path = os.path.join(TMP_DIR, file)
+        frame = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        if frame is not None:
+            frames.append(frame)
+        os.remove(path) #hopefully not a mistake?
+    logging.debug(f"generated/read {len(frames)} frames")
+    return frames
 
 def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATIO):
     """

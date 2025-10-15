@@ -40,7 +40,7 @@ ffmpeg -hide_banner -loglevel error -i /home/piuser/videos/buffer/segment_00008.
 
 time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_test_00060.h264 -vsync vfr -q:v 4 /home/piuser/videos/tmp/keyframe_%03d.jpg
 
-time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_00018.h264 -fps_mode vfr -q:v 4 /home/piuser/videos/tmp/keyframe_%03d.jpg -y -vf scale=160:90,format=gray
+time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_00018.h264 -fps_mode vfr -q:v 4 -y -vf scale=160:90,format=gray /home/piuser/videos/tmp/keyframe_%03d.jpg 
 
 echo segment_{00000..03990}.h264
 rm -f segment_{00100..03990}.h264
