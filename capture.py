@@ -9,10 +9,12 @@ LOG_FILE = "/home/piuser/videos/logs/capture.log"
 
 HQ_WIDTH = "1920"
 HQ_HEIGHT = "1080"
-HQ_FRAMERATE = 20
+HQ_FRAMERATE = 30
+
+
 _I_FRAME_EVERY = 3
 HQ_INTRA = HQ_FRAMERATE * _I_FRAME_EVERY # record an I-frame every _I_FRAME_EVERY seconds, used for fast decoding of frames for ffmpeg to later extract. (the only way I could get speedup > 1) 
-_SECS_PER_SEGMENT = 30 # N seconds
+_SECS_PER_SEGMENT = 20 # N seconds
 HQ_SEGMENT = str(_SECS_PER_SEGMENT*1000) # in milliseconds
 
 os.makedirs(BUFFER_DIR, exist_ok=True)
