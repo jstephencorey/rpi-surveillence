@@ -13,8 +13,8 @@ CLIP_DIR = "/home/piuser/videos/clips"
 
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
-CHANGE_RATIO=0.001
-FLUSH_N_CLIPS = 32 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
+CHANGE_RATIO=0.005
+FLUSH_N_CLIPS = 16 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
 
 LQ_WIDTH, LQ_HEIGHT = 160, 90  # resize early in ffmpeg
 
