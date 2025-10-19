@@ -53,5 +53,11 @@ reboot with `sudo reboot`
 
 
 
+## Path forwards:
 
-
+Fix the first-run startup processing stuff. 
+Set up a server endpoint to recieve and re-transcode the H264 media to H265 (copy the old flask endpoint I have and add ffmpeg? Comment out the immich stuff for now/make that a different endpoint?)
+    For now, store them locally on my server. Immich upload later. 
+Get uploading set up (to server or immich directly)
+Get Encoding set up (and jupyter or something to de-encode.)
+Get physical stuff set up? switch, battery, etc.(3d printing?)

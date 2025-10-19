@@ -42,6 +42,17 @@ time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_test_00060.h
 
 time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_00018.h264 -fps_mode vfr -q:v 4 -y -vf scale=160:90,format=gray /home/piuser/videos/tmp/keyframe_%03d.jpg 
 
+ffmpeg -hwaccel cuda -i "S:\Dev\rpi-surveillence\buffer\encode_test\clip_02239_1.mp4" -c:v hevc_nvenc -preset p7 -cq 30 -c:a copy "S:\Dev\rpi-surveillence\buffer\encode_test\hevc_nvenc.mp4"
+
+ffmpeg -hwaccel cuda -i "S:\Dev\rpi-surveillence\buffer\encode_test\clip_02239_1.mp4" -c:v av1_nvenc -preset p7 -cq 38 -c:a copy "S:\Dev\rpi-surveillence\buffer\encode_test\av1_nvenc_38.mkv"
+
+time ffmpeg -i /home/piuser/videos/test/test.h264 /home/piuser/videos/test/test.mp4
+
+ffmpeg -hwaccel cuda -i ~/temp/clip_02239_1.mp4 -c:v hevc_nvenc -preset p7 -cq 30 -c:a copy ~/temp/hevc_nvenc_serv.mp4
+
+ffmpeg -hwaccel cuda -i ~/temp/clip_02239_1.mp4 -c:v av1_nvenc -preset p7 -cq 38 -c:a copy ~/temp/av1_nvenc_serv.mkv
+
+
 echo segment_{00000..03990}.h264
 rm -f segment_{00100..03990}.h264
 

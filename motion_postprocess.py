@@ -38,7 +38,7 @@ def extract_sample_frames(input_path):
     logging.debug(f"Extracting sample frames (optimized) from {input_path}")
     # with tempfile.TemporaryDirectory() as tmpdir:
     # tmpdir = "S:\\Dev\\rpi-surveillence\\buffer\\buffer_tmp"
-    vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=gray"
+    vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=yuv420p"
     output_pattern = os.path.join(TMP_DIR, "frame_%04d.jpg")
     cmd = [
         "ffmpeg", "-hide_banner", 
@@ -135,6 +135,8 @@ def save_clip(segments):
 if __name__ == "__main__":
     motion_group = []
     processed_segments = set()
+    # todo add first run logic to not add things to processed_segments until after the first run. 
+    first_run = True
     while True:
         try:
             segments = sorted(os.listdir(BUFFER_DIR)) #assumes a sortable order
@@ -170,9 +172,13 @@ if __name__ == "__main__":
                         motion_group = []
                     os.remove(seg_path)
                     logging.debug(f"Removed non-motion segment: {seg_path}")
-
-                processed_segments.add(seg)
-                time.sleep(0.1)
+                
+                if first_run:
+                    time.sleep(0.5) # allow time for things to process, but don't add to processed segments, because if it re-records somethign over that number, it otherwise won't process it. 
+                else:
+                    processed_segments.add(seg)
+                    time.sleep(0.1)
+            first_run = False
             time.sleep(SLEEP_INTERVAL)
 
         except Exception as e:
