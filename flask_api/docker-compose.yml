@@ -1,0 +1,10 @@
+services:
+  uploader-api:
+    build: .
+    ports:
+      - "5001:5000"
+    env_file:
+      - .env
+    restart: 'unless-stopped'
+    volumes:
+      - /zstorage/tmp  # or any writable temp space

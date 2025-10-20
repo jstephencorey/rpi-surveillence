@@ -51,11 +51,12 @@ Make the setup file runnable with `chmod +x setup.sh capture.py motion_postproce
 Run the setup `sudo ./setup.sh`
 reboot with `sudo reboot`
 
+for testing: `git stash; git pull; chmod +x setup.sh capture.py motion_postprocess.py; sudo ./setup.sh`
+
 
 
 ## Path forwards:
 
-Fix the first-run startup processing stuff. 
 Set up a server endpoint to recieve and re-transcode the H264 media to H265 (copy the old flask endpoint I have and add ffmpeg? Comment out the immich stuff for now/make that a different endpoint?)
     For now, store them locally on my server. Immich upload later. 
 Get uploading set up (to server or immich directly)
