@@ -1,13 +1,22 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import os, tempfile, subprocess, shutil, logging
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
 import pytz
 import uuid
+import threading
 
 # Load environment variables
 load_dotenv()
+
+
+OUTPUT_DIR = "/zstorage/surveillence_video"
+INCOMING_DIR = os.path.join(OUTPUT_DIR, "incoming")
+
+os.makedirs(INCOMING_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 
 # Flask app setup
 app = Flask(__name__)
@@ -23,6 +32,56 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+
+def encode_in_background(input_path, output_path):
+    """Run ffmpeg H.265 NVENC encode asynchronously."""
+    try:
+        subprocess.run([
+            "ffmpeg", "-y",
+            "-hwaccel", "cuda",
+            "-i", input_path,
+            "-c:v", "hevc_nvenc",
+            "-preset", "p7",       # very slow, highest quality
+            "-cq", "28",           # constant quality (lower = higher quality)
+            "-c:a", "copy",
+            output_path
+        ], check=True)
+        os.remove(input_path)
+        print(f"[ENCODED] {output_path}")
+    except subprocess.CalledProcessError as e:
+        print(f"[ERROR] FFmpeg failed for {input_path}: {e}")
+
+
+@app.route("/upload_clip", methods=["POST"])
+def upload_clip():
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    # Save incoming file
+    base_name = os.path.splitext(os.path.basename(file.filename))[0]
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    temp_path = os.path.join(INCOMING_DIR, f"{base_name}_{timestamp}.mp4")
+    file.save(temp_path)
+
+    output_path = os.path.join(OUTPUT_DIR, f"{base_name}_{timestamp}.mp4")
+
+    # Spawn encoding in background
+    threading.Thread(target=encode_in_background, args=(temp_path, output_path)).start()
+
+    return jsonify({
+        "status": "uploaded",
+        "saved_to": temp_path,
+        "encoding_to": output_path
+    }), 200
+
+
+
 
 # Load secrets from .env
 SECRET_KEY = os.getenv("SECRET_KEY")

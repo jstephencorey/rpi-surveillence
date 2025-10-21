@@ -42,7 +42,7 @@ time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_test_00060.h
 
 time ffmpeg -skip_frame nokey -i /home/piuser/videos/buffer/segment_00018.h264 -fps_mode vfr -q:v 4 -y -vf scale=160:90,format=gray /home/piuser/videos/tmp/keyframe_%03d.jpg 
 
-ffmpeg -hwaccel cuda -i "S:\Dev\rpi-surveillence\buffer\encode_test\clip_02239_1.mp4" -c:v hevc_nvenc -preset p7 -cq 30 -c:a copy "S:\Dev\rpi-surveillence\buffer\encode_test\hevc_nvenc.mp4"
+ffmpeg -hwaccel cuda -i "S:\Dev\rpi-surveillence\buffer\encode_test\clip_02239_1.mp4" -c:v hevc_nvenc -preset p7 -cq 28 -c:a copy "S:\Dev\rpi-surveillence\buffer\encode_test\hevc_nvenc_28.mp4"
 
 ffmpeg -hwaccel cuda -i "S:\Dev\rpi-surveillence\buffer\encode_test\clip_02239_1.mp4" -c:v av1_nvenc -preset p7 -cq 38 -c:a copy "S:\Dev\rpi-surveillence\buffer\encode_test\av1_nvenc_38.mkv"
 

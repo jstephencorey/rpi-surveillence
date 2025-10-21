@@ -2,8 +2,9 @@ import os
 import cv2
 import numpy as np
 import subprocess
-import tempfile
+import shutil
 import logging
+from pathlib import Path
 import time
 
 BUFFER_DIR = "/home/piuser/videos/buffer"
@@ -17,6 +18,8 @@ CHANGE_RATIO=0.005
 FLUSH_N_CLIPS = 16 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
 
 LQ_WIDTH, LQ_HEIGHT = 160, 90  # resize early in ffmpeg
+ 
+MIN_FREE_SPACE = 2 * 1024 * 1024 * 1024  # 2 GB
 
 
 os.makedirs(CLIP_DIR, exist_ok=True)
@@ -32,6 +35,31 @@ logging.basicConfig(level=logging.DEBUG,
                     ])
 
 logging.debug("test")
+
+
+def ensure_space_for_video(new_video_path: Path):
+    """If SD card is too full, delete the new video to prevent overflow."""
+    try:
+        stat = shutil.disk_usage(CLIP_DIR)
+        free_space = stat.free
+
+        if free_space < MIN_FREE_SPACE:
+            logging.warning(
+                f"Low disk space ({free_space / (1024**2):.1f} MB free). Deleting {new_video_path.name}"
+            )
+            if new_video_path.exists():
+                new_video_path.unlink()  # Delete the file
+                logging.info(f"Deleted {new_video_path.name} to save space.")
+            else:
+                logging.warning(f"{new_video_path} not found; could not delete.")
+            return False
+        else:
+            logging.debug(f"Enough space available ({free_space / (1024**2):.1f} MB free).")
+            return True
+        
+    except Exception as e:
+        logging.error(f"Error checking disk space: {e}")
+        return False
 
 def extract_sample_frames(input_path):
     """Efficiently extract sample frames directly from .h264 via ffmpeg pipe."""
@@ -154,6 +182,11 @@ if __name__ == "__main__":
                 if i == len(segments) - 1:
                     logging.debug("reached the end of the segments")
                     time.sleep(0.1)
+                    break
+
+                if not ensure_space_for_video(Path(seg_path)):
+                    logging.warning("Not enough space, new file deleted")
+                    time.sleep(1)
                     break
 
                 frames = extract_sample_frames(seg_path)
