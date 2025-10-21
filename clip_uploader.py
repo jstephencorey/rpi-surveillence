@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 # === CONFIG ===
 WATCH_DIR = "/home/piuser/videos/clips"
-SERVER_URL = "http://192.168.0.61:5000/upload_clip"
+SERVER_URL = "http://192.168.0.61:5002/upload_clip"
 SLEEP_INTERVAL = 2  # seconds
 STABILITY_CHECK_TIME = 5  # seconds to wait to confirm file size unchanged
 
