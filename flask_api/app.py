@@ -43,8 +43,8 @@ def encode_in_background(input_path, output_path):
             "-i", input_path,
             "-c:v", "hevc_nvenc",
             "-preset", "p7",       # very slow, highest quality
-            "-cq", "28",           # constant quality (lower = higher quality)
-            "-c:a", "copy",
+            "-cq", "27",           # constant quality (lower = higher quality)
+            "-c:a", "copy", # copy audio
             output_path
         ], check=True)
         os.remove(input_path)

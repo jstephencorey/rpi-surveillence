@@ -8,9 +8,9 @@ mkdir -p -m 755 "$VIDEOS_DIR/buffer" "$VIDEOS_DIR/clips"
 sudo chown -R piuser:piuser /home/piuser/videos
 
 echo "Installing ffmpeg and python libraries..."
-sudo apt install -y ffmpeg python3-opencv python3-numpy python3-dotenv python3-watchdog
+sudo apt install -y ffmpeg python3-opencv python3-numpy python3-dotenv
 
-echo "Stopping/disabling old services..." #todo remove this eventually
+echo "Stopping/disabling old services..." #todo remove this eventually #todo deal with this on the first run?
 sudo systemctl disable capture.service
 sudo systemctl stop capture.service
 sudo systemctl disable motion_postprocess.service
