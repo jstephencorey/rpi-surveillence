@@ -7,7 +7,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy ffmpeg binaries from the first image
-COPY --from=ffmpeg /usr/bin/ffmpeg /usr/bin/ffprobe /usr/bin/
+COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffprobe /usr/local/bin/
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
