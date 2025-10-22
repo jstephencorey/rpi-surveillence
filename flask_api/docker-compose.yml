@@ -8,10 +8,6 @@ services:
     restart: 'unless-stopped'
     volumes:
       - /zstorage/surveillance_video:/data/video
-    device_requests:
-      - driver: nvidia
-        count: all
-        capabilities: [gpu]
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
