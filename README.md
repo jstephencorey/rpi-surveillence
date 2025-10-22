@@ -58,6 +58,7 @@ for testing: `git stash; git pull; chmod +x setup.sh capture.py motion_postproce
 This is set up to go on my personal server in a docker container. You'll likely need to chang several things (e.g. the attached volume and it's reference in app.py) to make it work for you.
 `git clone https://github.com/jstephencorey/rpi-surveillence.git`
 `cd rpi-surveillence/flask_api`
+edit the .env file with `vim .env`. Currently you just need to put it there, nothing is being used.
 `docker compose up -d --build`
 Verify it's working with postman or bruno or something. 
 ## Path forwards:

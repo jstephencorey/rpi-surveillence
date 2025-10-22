@@ -36,6 +36,7 @@ logging.basicConfig(
 
 def encode_in_background(input_path, output_path):
     """Run ffmpeg H.265 NVENC encode asynchronously."""
+    logging.info("Running background decode now")
     try:
         subprocess.run([
             "ffmpeg", "-y",
@@ -55,11 +56,14 @@ def encode_in_background(input_path, output_path):
 
 @app.route("/upload_clip", methods=["POST"])
 def upload_clip():
+    logging.info("Received POST /upload_clip request")
     if "file" not in request.files:
+        logging.warning("No file uploaded")
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
     if file.filename == "":
+        logging.warning("Empty filename")
         return jsonify({"error": "Empty filename"}), 400
 
     # Save incoming file
@@ -70,7 +74,7 @@ def upload_clip():
     file.save(temp_path)
 
     output_path = os.path.join(OUTPUT_DIR, f"{base_name}_{timestamp}.mp4")
-
+    logging.info(f"Saving to Output {output_path}")
     # Spawn encoding in background
     threading.Thread(target=encode_in_background, args=(temp_path, output_path)).start()
 
