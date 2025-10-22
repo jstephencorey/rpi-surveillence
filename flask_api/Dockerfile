@@ -1,4 +1,4 @@
-FROM linuxserver/ffmpeg:version-8.0-cli
+FROM jrottenberg/ffmpeg:6.1-nvidia
 
 # Install Python
 RUN apt-get update && \
