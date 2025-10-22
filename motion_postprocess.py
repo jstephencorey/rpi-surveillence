@@ -15,7 +15,7 @@ CLIP_DIR = "/home/piuser/videos/clips"
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
 CHANGE_RATIO=0.005
-FLUSH_N_CLIPS = 16 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
+FLUSH_N_CLIPS = 4 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
 
 LQ_WIDTH, LQ_HEIGHT = 160, 90  # resize early in ffmpeg
  
@@ -197,7 +197,7 @@ if __name__ == "__main__":
                     if len(motion_group) > FLUSH_N_CLIPS:
                         logging.debug(f"Flushing all current motion group segments to a clip despite motion being detected")
                         save_clip(motion_group)
-                        motion_group = [seg_path] #note that this prioritizes cohesive video viewing over later recompilation into one big video. Think about changing later todo
+                        motion_group = [] # motion_group = [seg_path] #note that this prioritizes cohesive video viewing over later recompilation into one big video. Think about changing later todo
                 else:
                     if motion_group:
                         logging.debug(f"saving all current motion group segments to a clip")

@@ -1,0 +1,17 @@
+[Unit]
+Description=Service to upload the motion-detected .mp4 files
+After=network.target
+
+[Service]
+User=piuser
+Group=piuser
+WorkingDirectory=/home/piuser
+ExecStart=/usr/bin/python3 -O /home/piuser/rpi-surveillence/clip_uploader.py
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=clip_uploader
+
+[Install]
+WantedBy=multi-user.target

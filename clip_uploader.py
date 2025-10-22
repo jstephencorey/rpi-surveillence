@@ -34,7 +34,7 @@ def upload_clip(file_path: Path):
         with open(file_path, "rb") as f:
             files = {"file": (file_path.name, f, "video/mp4")}
             logging.info(f"Uploading {file_path.name} ...")
-            response = requests.post(SERVER_URL, files=files, timeout=60)
+            response = requests.post(SERVER_URL, files=files, timeout=120)
         if response.status_code == 200:
             logging.info(f"✅ Uploaded {file_path.name}")
             file_path.unlink(missing_ok=True)

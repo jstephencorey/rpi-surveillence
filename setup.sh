@@ -19,10 +19,12 @@ sudo systemctl stop motion_postprocess.service
 echo "Installing systemd services..."
 sudo cp /home/piuser/rpi-surveillence/capture.service /etc/systemd/system/capture.service
 sudo cp /home/piuser/rpi-surveillence/motion_postprocess.service /etc/systemd/system/motion_postprocess.service
+sudo cp /home/piuser/rpi-surveillence/clip_uploader.service /etc/systemd/system/clip_uploader.service
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now capture.service
 sudo systemctl enable --now motion_postprocess.service
+sudo systemctl enable --now clip_uploader.service
 
 # to stop and disable a service for testing:
 # sudo systemctl stop motion_postprocess.service
