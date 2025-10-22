@@ -7,13 +7,7 @@ services:
       - .env
     restart: 'unless-stopped'
     volumes:
-      - /data/video:/zstorage/surveillence_video
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-    runtime: nvidia
+      - /zstorage/surveillance_video:/data/video
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
