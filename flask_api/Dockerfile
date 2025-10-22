@@ -1,17 +1,19 @@
-# Stage 1: get ffmpeg with hw acceleration
-FROM linuxserver/ffmpeg:version-8.0-cli as ffmpeg
+FROM linuxserver/ffmpeg:version-8.0-cli
 
-# Stage 2: your app
-FROM python:3.11-slim
+# Install Python
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy ffmpeg binaries from the first image
-COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffprobe /usr/local/bin/
-
+# Copy Python dependencies
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
+# Copy the app
 COPY . .
 
+# Default command
 CMD ["gunicorn", "--config", "./gunicorn_config.py", "app:app"]
