@@ -11,7 +11,7 @@ import threading
 load_dotenv()
 
 
-OUTPUT_DIR = "/zstorage/surveillence_video"
+OUTPUT_DIR = "/data/video"
 INCOMING_DIR = os.path.join(OUTPUT_DIR, "incoming")
 
 os.makedirs(INCOMING_DIR, exist_ok=True)
@@ -49,9 +49,9 @@ def encode_in_background(input_path, output_path):
             output_path
         ], check=True)
         os.remove(input_path)
-        print(f"[ENCODED] {output_path}")
+        logging.info(f"Finished [ENCODED] {output_path}")
     except subprocess.CalledProcessError as e:
-        print(f"[ERROR] FFmpeg failed for {input_path}: {e}")
+        logging.warning(f"[ERROR] FFmpeg failed for {input_path}: {e}")
 
 
 @app.route("/upload_clip", methods=["POST"])

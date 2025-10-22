@@ -7,7 +7,7 @@ services:
       - .env
     restart: 'unless-stopped'
     volumes:
-      - /zstorage/surveillence_video 
+      - /data/video:/zstorage/surveillence_video
     deploy:
       resources:
         reservations:

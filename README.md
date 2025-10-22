@@ -55,7 +55,7 @@ for testing: `git stash; git pull; chmod +x setup.sh capture.py motion_postproce
 
 ### Set up the upload server:
 
-This is set up to go on my personal server in a docker container. You'll likely need to chang several things (e.g. the attached volume and it's reference in app.py) to make it work for you.
+This is set up to go on my personal server in a docker container. You'll likely need to change several things (e.g. the attached volume and it's reference in app.py) to make it work for you.
 `git clone https://github.com/jstephencorey/rpi-surveillence.git`
 `cd rpi-surveillence/flask_api`
 edit the .env file with `vim .env`. Currently you just need to put it there, nothing is being used.
@@ -63,6 +63,7 @@ edit the .env file with `vim .env`. Currently you just need to put it there, not
 Verify it's working with postman or bruno or something. 
 
 For testing: `cd ../; git pull; cd ./flask_api; docker compose up -d --build;` 
+
 ## Path forwards:
 
 Set up a server endpoint to recieve and re-transcode the H264 media to H265 (copy the old flask endpoint I have and add ffmpeg? Comment out the immich stuff for now/make that a different endpoint?)
