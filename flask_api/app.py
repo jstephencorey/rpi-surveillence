@@ -20,7 +20,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Flask app setup
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # increase if needed
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 * 1024  # increase if needed, currently 2 GB
 
 
 # Setup logging
@@ -44,7 +44,7 @@ def encode_in_background(input_path, output_path):
             "-i", input_path,
             "-c:v", "hevc_nvenc",
             "-preset", "p7",       # very slow, highest quality
-            "-cq", "27",           # constant quality (lower = higher quality)
+            "-cq", "28",           # constant quality (lower = higher quality)
             "-c:a", "copy", # copy audio
             output_path
         ], check=True)
