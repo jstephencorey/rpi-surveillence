@@ -6,6 +6,7 @@ from datetime import datetime
 import pytz
 import uuid
 import threading
+from zoneinfo import ZoneInfo
 
 # Load environment variables
 load_dotenv()
@@ -68,12 +69,12 @@ def upload_clip():
 
     # Save incoming file
     base_name = os.path.splitext(os.path.basename(file.filename))[0]
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(ZoneInfo("America/Denver")).strftime("%Y%m%d_%H%M%S")
 
-    temp_path = os.path.join(INCOMING_DIR, f"{base_name}_{timestamp}.mp4")
+    temp_path = os.path.join(INCOMING_DIR, f"{timestamp}_{base_name}.mp4")
     file.save(temp_path)
 
-    output_path = os.path.join(OUTPUT_DIR, f"{base_name}_{timestamp}.mp4")
+    output_path = os.path.join(OUTPUT_DIR, f"{timestamp}_{base_name}.mp4")
     logging.info(f"Saving to Output {output_path}")
     # Spawn encoding in background
     threading.Thread(target=encode_in_background, args=(temp_path, output_path)).start()
