@@ -235,3 +235,12 @@ if __name__ == "__main__":
             path = os.path.join(BUFFER_DIR, filename)
             process_file(path)
 
+
+echo segment_{00000..01816}.h264
+
+echo clip_{01563..05469}_1.mp4
+echo clip_{00200..00940}_1.mp4
+echo clip_{00014..00061}_1.mp4
+echo clip_{05475..06000}_1.mp4
+
+jstephencorey@Fracture:/mnt/s/Dev/rpi-surveillence/buffer/clips2$ rsync -avP --remove-source-files piuser@192.168.0.64:~/videos/clips/* ./
