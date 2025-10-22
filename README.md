@@ -61,6 +61,8 @@ This is set up to go on my personal server in a docker container. You'll likely 
 edit the .env file with `vim .env`. Currently you just need to put it there, nothing is being used.
 `docker compose up -d --build`
 Verify it's working with postman or bruno or something. 
+
+For testing: `cd ../; git pull; cd ./flask_api; docker compose up -d --build;` 
 ## Path forwards:
 
 Set up a server endpoint to recieve and re-transcode the H264 media to H265 (copy the old flask endpoint I have and add ffmpeg? Comment out the immich stuff for now/make that a different endpoint?)
