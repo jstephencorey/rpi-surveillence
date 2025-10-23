@@ -66,10 +66,12 @@ For testing: `cd ../; git pull; cd ./flask_api; docker compose up -d --build;`
 
 ## Path forwards:
 
-Set up a server endpoint to recieve and re-transcode the H264 media to H265 (copy the old flask endpoint I have and add ffmpeg? Comment out the immich stuff for now/make that a different endpoint?)
-    For now, store them locally on my server. Immich upload later. 
-Add timezone to the upload timestamp stuff
-Get uploading set up (to server or immich directly)
+First off, currently I have a working surveillance camera! It works and will save videos to my home server. That's a cool thing to have and celebrate (:
+send to hvec folder instead of root
+Jupyter notebook or script to grab the server .h265 .mp4 videos, reencode as av1, and send (back to the server? straight to immich?)
+    I think for now send it to immich ONLY after the .av1 stuff. 
+Join videos next to each other? (e.g. partial/part_###, final?) - I think this would be good, especially with the discovered limit of ~100 mb files I can send from the rpi zero 2 w before it breaks. 
 Rename the repo 🙈
+    And rename references to this repo within it. 
 Get Encoding set up (and jupyter or something to de-encode.)
 Get physical stuff set up? switch, battery, etc.(3d printing?)

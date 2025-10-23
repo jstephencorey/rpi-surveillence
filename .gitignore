@@ -2,3 +2,4 @@
 /buffer*
 /.venv*
 *.env
+/tmp*
