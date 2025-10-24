@@ -21,6 +21,9 @@ LQ_WIDTH, LQ_HEIGHT = 160, 90  # resize early in ffmpeg
  
 MIN_FREE_SPACE = 2 * 1024 * 1024 * 1024  # 2 GB
 
+IN_PROGRESS = "partial"
+FINAL = "final"
+
 
 os.makedirs(CLIP_DIR, exist_ok=True)
 os.makedirs(BUFFER_DIR, exist_ok=True)
@@ -122,7 +125,7 @@ def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATI
     return avg_ratio > change_ratio
 
 # === Save clip ===
-def save_clip(segments):
+def save_clip(segments, additional_note=None):
     """Concatenate motion segments into a single mp4 clip."""
     if not segments:
         return
@@ -132,7 +135,10 @@ def save_clip(segments):
     iter_num = 1 # doesn't overwrite files when the device resets.
     while (os.path.exists(os.path.join(CLIP_DIR, clip_name+f"_{iter_num}"+clip_file_extension))):
         iter_num += 1
-    clip_name = clip_name+f"_{iter_num}"+clip_file_extension
+    clip_name = clip_name+f"_{iter_num}"
+    if additional_note is not None:
+        clip_name = clip_name + f"_{additional_note}"
+    clip_name = clip_name+clip_file_extension
     clip_path = os.path.join(CLIP_DIR, clip_name)
 
     try:
@@ -165,6 +171,7 @@ if __name__ == "__main__":
     processed_segments = set()
     # todo add first run logic to not add things to processed_segments until after the first run. 
     first_run = True
+    motion_run_continuation = False
     while True:
         try:
             segments = sorted(os.listdir(BUFFER_DIR)) #assumes a sortable order
@@ -196,15 +203,19 @@ if __name__ == "__main__":
                     motion_group.append(seg_path)
                     if len(motion_group) > FLUSH_N_CLIPS:
                         logging.debug(f"Flushing all current motion group segments to a clip despite motion being detected")
-                        save_clip(motion_group)
+                        save_clip(motion_group, IN_PROGRESS)
                         motion_group = [] # motion_group = [seg_path] #note that this prioritizes cohesive video viewing over later recompilation into one big video. Think about changing later todo
+                        motion_run_continuation = True
                 else:
-                    if motion_group:
-                        logging.debug(f"saving all current motion group segments to a clip")
+                    logging.debug(f"saving all current motion group segments to a clip")
+                    if motion_run_continuation:
+                        save_clip(motion_group, FINAL)
+                    else:
                         save_clip(motion_group)
-                        motion_group = []
+                    motion_group = []
                     os.remove(seg_path)
                     logging.debug(f"Removed non-motion segment: {seg_path}")
+                    motion_run_continuation = False
                 
                 if first_run:
                     time.sleep(0.5) # allow time for things to process, but don't add to processed segments, because if it re-records somethign over that number, it otherwise won't process it. 
