@@ -51,7 +51,7 @@ Make the setup file runnable with `chmod +x setup.sh capture.py motion_postproce
 Run the setup `sudo ./setup.sh`
 reboot with `sudo reboot`
 
-for testing: `git stash; git pull; chmod +x setup.sh capture.py motion_postprocess.py; sudo ./setup.sh`
+for testing: `git stash; git pull; chmod +x setup.sh capture.py motion_postprocess.py clip_uploader.py; sudo ./setup.sh`
 
 ### Set up the upload server:
 

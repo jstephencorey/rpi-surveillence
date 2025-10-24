@@ -15,6 +15,8 @@ sudo systemctl disable capture.service
 sudo systemctl stop capture.service
 sudo systemctl disable motion_postprocess.service
 sudo systemctl stop motion_postprocess.service
+sudo systemctl disable clip_uploader.service
+sudo systemctl stop clip_uploader.service
 
 echo "Installing systemd services..."
 sudo cp /home/piuser/rpi-surveillence/capture.service /etc/systemd/system/capture.service
