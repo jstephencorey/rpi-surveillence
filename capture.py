@@ -26,7 +26,7 @@ logging.basicConfig(filename=LOG_FILE,
 
 def main():
     logging.info("Starting capture loop...")
-    segment_pattern = os.path.join(BUFFER_DIR, "segment_%05d.h264")
+    segment_pattern = os.path.join(BUFFER_DIR, "segment_%06d.h264")
 
     cmd = [
         "rpicam-vid",
