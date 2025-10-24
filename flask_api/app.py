@@ -76,8 +76,10 @@ def upload_clip():
 
     output_path = os.path.join(OUTPUT_DIR, f"{timestamp}_{base_name}.mp4")
     logging.info(f"Saving to Output {output_path}")
-    # Spawn encoding in background
-    threading.Thread(target=encode_in_background, args=(temp_path, output_path)).start()
+    # This is an option that doesn't encode it at all, and will let my home computer do all of that
+    os.rename(temp_path, output_path)
+    # Spawn encoding in background to encode with h265
+    # threading.Thread(target=encode_in_background, args=(temp_path, output_path)).start()
 
     return jsonify({
         "status": "uploaded",

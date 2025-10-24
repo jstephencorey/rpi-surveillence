@@ -71,6 +71,7 @@ send to hvec folder instead of root
 Jupyter notebook or script to grab the server .h265 .mp4 videos, reencode as av1, and send (back to the server? straight to immich?)
     I think for now send it to immich ONLY after the .av1 stuff. 
 Join videos next to each other? (e.g. partial/part_###, final?) - I think this would be good, especially with the discovered limit of ~100 mb files I can send from the rpi zero 2 w before it breaks. 
+Increase the clip_### to one more OOM
 Rename the repo 🙈
     And rename references to this repo within it. 
 Get Encoding set up (and jupyter or something to de-encode.)

@@ -246,3 +246,5 @@ echo clip_{05475..06000}_1.mp4
 jstephencorey@Fracture:/mnt/s/Dev/rpi-surveillence/buffer/clips2$ rsync -avP --remove-source-files piuser@192.168.0.64:~/videos/clips/* ./
 
 scp jstephencorey@192.168.0.61:/zstorage/surveillance_video/20251023_101552_clip_02983_1.mp4 ./tmp/20251023_101552_clip_02983_1.mp4 -i C:\\Users\\jstep\\.ssh\\jserver_ssh
+
+ffmpeg -hwaccel cuda -i 20251023_175550_clip_04199_1.mp4 -c:v av1_nvenc -preset p7 -cq 42 -c:a copy output_av1_42.mkv
