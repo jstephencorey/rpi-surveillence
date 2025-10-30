@@ -171,8 +171,10 @@ def clear_buffer_dir():
     segments = sorted(os.listdir(BUFFER_DIR))
     for segment in segments:
         if "segment_000000.h264" in segments or "segment_000001.h264" in segment:
+            logging.info(f"Skipping segment {segment} for removal")
             continue #Skip the first currently-recorded videos. 
         else:
+            logging.info(f"Removing segment {segment}")
             src = os.path.join(BUFFER_DIR, segment)
             dest = os.path.join(OLD_BUFFER_DIR, segment)
             os.rename(src, dest) # Note that this may overwrite some clips, this is currently acceptable choice. 
