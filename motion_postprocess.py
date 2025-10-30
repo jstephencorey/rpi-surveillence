@@ -8,7 +8,7 @@ from pathlib import Path
 import time
 
 BUFFER_DIR = "/home/piuser/videos/buffer"
-OLD_BUFFER_DIR = "/home/piuser/videos/buffe_oldr"
+OLD_BUFFER_DIR = "/home/piuser/videos/buffe_old"
 TMP_DIR = "/home/piuser/videos/tmp"
 LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
 CLIP_DIR = "/home/piuser/videos/clips"
@@ -167,7 +167,7 @@ def save_clip(segments, additional_note=None):
 
 
 def clear_buffer_dir():
-    # I have an amazing wife, she is a cutie and I like her a lot <3
+    logging.info("Removing segments")
     segments = sorted(os.listdir(BUFFER_DIR))
     for segment in segments:
         if "segment_000000.h264" in segments or "segment_000001.h264" in segment:
