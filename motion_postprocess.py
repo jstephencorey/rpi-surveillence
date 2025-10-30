@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 
 BUFFER_DIR = "/home/piuser/videos/buffer"
+OLD_BUFFER_DIR = "/home/piuser/videos/buffe_oldr"
 TMP_DIR = "/home/piuser/videos/tmp"
 LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
 CLIP_DIR = "/home/piuser/videos/clips"
@@ -15,7 +16,7 @@ CLIP_DIR = "/home/piuser/videos/clips"
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
 CHANGE_RATIO=0.007
-FLUSH_N_CLIPS = 2 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
+FLUSH_N_CLIPS = 3 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
 
 LQ_WIDTH, LQ_HEIGHT = 160, 90  # resize early in ffmpeg
  
@@ -27,6 +28,7 @@ FINAL = "final"
 
 os.makedirs(CLIP_DIR, exist_ok=True)
 os.makedirs(BUFFER_DIR, exist_ok=True)
+os.makedirs(OLD_BUFFER_DIR, exist_ok=True)
 os.makedirs(TMP_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
@@ -67,8 +69,6 @@ def ensure_space_for_video(new_video_path: Path):
 def extract_sample_frames(input_path):
     """Efficiently extract sample frames directly from .h264 via ffmpeg pipe."""
     logging.debug(f"Extracting sample frames (optimized) from {input_path}")
-    # with tempfile.TemporaryDirectory() as tmpdir:
-    # tmpdir = "S:\\Dev\\rpi-surveillence\\buffer\\buffer_tmp"
     vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=yuv420p"
     output_pattern = os.path.join(TMP_DIR, "frame_%04d.jpg")
     cmd = [
@@ -108,7 +108,7 @@ def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATI
         logging.warning(f"not enough frames, only {len(frames)} of them")
         return False
     
-    # frames = [cv2.resize(f, (0,0), fx=0.25, fy=0.25) for f in frames]
+    # frames = [cv2.resize(f, (0,0), fx=0.25, fy=0.25) for f in frames] # no longer needed
     frames = [cv2.GaussianBlur(f, (5,5), 0) for f in frames]
 
     total_pixels = frames[0].size
@@ -166,11 +166,22 @@ def save_clip(segments, additional_note=None):
         logging.exception(f"Error while saving clip: {e}")
 
 
+def clear_buffer_dir():
+    # I have an amazing wife, she is a cutie and I like her a lot <3
+    segments = sorted(os.listdir(BUFFER_DIR))
+    for segment in segments:
+        if "segment_000000.h264" in segments or "segment_000001.h264" in segment:
+            continue #Skip the first currently-recorded videos. 
+        else:
+            src = os.path.join(BUFFER_DIR, segment)
+            dest = os.path.join(OLD_BUFFER_DIR, segment)
+            os.rename(src, dest) # Note that this may overwrite some clips, this is currently acceptable choice. 
+
+
 if __name__ == "__main__":
+    clear_buffer_dir()
     motion_group = []
     processed_segments = set()
-    # todo add first run logic to not add things to processed_segments until after the first run. 
-    first_run = True
     motion_run_continuation = False
     while True:
         try:
@@ -178,22 +189,22 @@ if __name__ == "__main__":
             # Skip already processed
             segments = [s for s in segments if s not in processed_segments]
             if not segments:
-                logging.debug("no available segments to process, sleeping")
+                logging.debug("No available segments to process, sleeping")
                 time.sleep(SLEEP_INTERVAL)
                 continue
 
             for i, seg in enumerate(segments):
-                logging.debug(f"processing segment #{i}, {seg}")
+                logging.debug(f"Processing segment #{i}, {seg}")
                 seg_path = os.path.join(BUFFER_DIR, seg)
                 # Always skip last one (may still be writing)
-                if i == len(segments) - 1:
-                    logging.debug("reached the end of the segments")
-                    time.sleep(0.1)
+                if i == (len(segments) - 1):
+                    logging.debug("Reached the end of the segments")
+                    time.sleep(SLEEP_INTERVAL)
                     break
 
                 if not ensure_space_for_video(Path(seg_path)):
                     logging.warning("Not enough space, new file deleted")
-                    time.sleep(1)
+                    time.sleep(SLEEP_INTERVAL)
                     break
 
                 frames = extract_sample_frames(seg_path)
@@ -203,11 +214,12 @@ if __name__ == "__main__":
                     motion_group.append(seg_path)
                     if len(motion_group) > FLUSH_N_CLIPS:
                         logging.debug(f"Flushing all current motion group segments to a clip despite motion being detected")
-                        save_clip(motion_group, IN_PROGRESS)
-                        motion_group = [] # motion_group = [seg_path] #note that this prioritizes cohesive video viewing over later recompilation into one big video. Think about changing later todo
+                        motion_group_to_save = motion_group[:-1]
+                        save_clip(motion_group_to_save, IN_PROGRESS)
+                        motion_group = [motion_group[-1]] # motion_group = [seg_path] #note that this prioritizes cohesive video viewing over later recompilation into one big video. Think about changing later todo
                         motion_run_continuation = True
                 else:
-                    logging.debug(f"saving all current motion group segments to a clip")
+                    logging.debug(f"Saving all current motion group segments to a clip")
                     if motion_run_continuation:
                         save_clip(motion_group, FINAL)
                     else:
@@ -217,11 +229,8 @@ if __name__ == "__main__":
                     logging.debug(f"Removed non-motion segment: {seg_path}")
                     motion_run_continuation = False
                 
-                if first_run:
-                    time.sleep(0.5) # allow time for things to process, but don't add to processed segments, because if it re-records somethign over that number, it otherwise won't process it. 
-                else:
-                    processed_segments.add(seg)
-                    time.sleep(0.1)
+                processed_segments.add(seg)
+                time.sleep(0.3)
             first_run = False
             time.sleep(SLEEP_INTERVAL)
 

@@ -3,6 +3,7 @@ import subprocess
 import os
 import signal
 import logging
+import time
 
 BUFFER_DIR = "/home/piuser/videos/buffer"
 LOG_FILE = "/home/piuser/videos/logs/capture.log"
@@ -17,6 +18,8 @@ HQ_INTRA = HQ_FRAMERATE * _I_FRAME_EVERY # record an I-frame every _I_FRAME_EVER
 _SECS_PER_SEGMENT = 20 # N seconds
 HQ_SEGMENT = str(_SECS_PER_SEGMENT*1000) # in milliseconds
 
+INITIAL_PAUSE_SECS = 5 # (wait to clear the buffer dir, start up everything, etc. )
+
 os.makedirs(BUFFER_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
@@ -25,6 +28,8 @@ logging.basicConfig(filename=LOG_FILE,
                     format="%(asctime)s [%(levelname)s] %(message)s")
 
 def main():
+    logging.info(f"Pausing for {INITIAL_PAUSE_SECS} secs to let things set up")
+    time.sleep(INITIAL_PAUSE_SECS)
     logging.info("Starting capture loop...")
     segment_pattern = os.path.join(BUFFER_DIR, "segment_%06d.h264")
 
