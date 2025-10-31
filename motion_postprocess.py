@@ -8,7 +8,7 @@ from pathlib import Path
 import time
 
 BUFFER_DIR = "/home/piuser/videos/buffer"
-OLD_BUFFER_DIR = "/home/piuser/videos/buffe_old"
+OLD_BUFFER_DIR = "/home/piuser/videos/buffer_old"
 TMP_DIR = "/home/piuser/videos/tmp"
 LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
 CLIP_DIR = "/home/piuser/videos/clips"
