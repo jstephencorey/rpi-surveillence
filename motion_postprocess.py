@@ -168,9 +168,9 @@ def save_clip(segments, additional_note=None):
 
 def clear_buffer_dir():
     logging.info("Removing segments")
-    segments = sorted(os.listdir(BUFFER_DIR))
+    segments = os.listdir(BUFFER_DIR)
     for segment in segments:
-        if "segment_000000.h264" in segments or "segment_000001.h264" in segment:
+        if "segment_000000.h264" in segment or "segment_000001.h264" in segment:
             logging.info(f"Skipping segment {segment} for removal")
             continue #Skip the first currently-recorded videos. 
         else:

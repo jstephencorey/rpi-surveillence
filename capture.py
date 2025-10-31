@@ -18,7 +18,7 @@ HQ_INTRA = HQ_FRAMERATE * _I_FRAME_EVERY # record an I-frame every _I_FRAME_EVER
 _SECS_PER_SEGMENT = 20 # N seconds
 HQ_SEGMENT = str(_SECS_PER_SEGMENT*1000) # in milliseconds
 
-INITIAL_PAUSE_SECS = 5 # (wait to clear the buffer dir, start up everything, etc. )
+INITIAL_PAUSE_SECS = 10 # (wait to clear the buffer dir, start up everything, etc. )
 
 os.makedirs(BUFFER_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
