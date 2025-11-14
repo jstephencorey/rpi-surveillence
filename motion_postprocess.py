@@ -10,12 +10,13 @@ import time
 BUFFER_DIR = "/home/piuser/videos/buffer"
 OLD_BUFFER_DIR = "/home/piuser/videos/buffer_old"
 TMP_DIR = "/home/piuser/videos/tmp"
+TMP_DIR = "./buffer/motion_test2"
 LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
 CLIP_DIR = "/home/piuser/videos/clips"
 
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
-CHANGE_RATIO=0.007
+CHANGE_RATIO=0.006
 FLUSH_N_CLIPS = 3 # if you have more than this many clips in a row with motion, flush them out into another clip even if you'll cut up the motion. 
 
 LQ_WIDTH, LQ_HEIGHT = 160, 90  # resize early in ffmpeg
@@ -109,9 +110,10 @@ def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATI
         return False
     
     # frames = [cv2.resize(f, (0,0), fx=0.25, fy=0.25) for f in frames] # no longer needed
-    frames = [cv2.GaussianBlur(f, (5,5), 0) for f in frames]
+    frames = [cv2.GaussianBlur(f, (7,7), 0) for f in frames]
 
     total_pixels = frames[0].size
+    # logging.info(f"total pixels {total_pixels}")
     ratios = []
 
     for a, b in zip(frames, frames[1:]):
@@ -119,7 +121,9 @@ def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATI
         motion_mask = diff > pixel_thresh
         ratio = np.count_nonzero(motion_mask) / total_pixels
         ratios.append(ratio)
-
+    logging.info(f"ratios: {[f'{ratio:0.3f}, ' for ratio in ratios]}")
+    ratios = [ratio for ratio in ratios if ratio < 0.90] # Remove noisy light issues?
+    logging.info(f"cleaned ratios: {[f'{ratio:0.3f}, ' for ratio in ratios]}")
     avg_ratio = np.mean(ratios)
     logging.info(f"motion pixel ratio: {avg_ratio:.6f}")
     return avg_ratio > change_ratio

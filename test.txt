@@ -248,3 +248,17 @@ jstephencorey@Fracture:/mnt/s/Dev/rpi-surveillence/buffer/clips2$ rsync -avP --r
 scp jstephencorey@192.168.0.61:/zstorage/surveillance_video/20251023_101552_clip_02983_1.mp4 ./tmp/20251023_101552_clip_02983_1.mp4 -i C:\\Users\\jstep\\.ssh\\jserver_ssh
 
 ffmpeg -hwaccel cuda -i 20251023_205909_clip_04687_1.mp4 -c:v av1_nvenc -preset p7 -cq 42 -c:a copy output_av1_42.mkv
+
+rpicam-vid \
+  --inline \
+  --width 1920 \
+  --height 1080 \
+  --framerate 30 \
+  --intra 90 \
+  --timeout 20000 \
+  --codec h264 \
+  --output some_movement_20_secs_iframe_3-11.h264
+
+rsync -avP --remove-source-files piuser@192.168.0.64:~/videos/motion_test/* /mnt/s/Dev/rpi-surveillence/buffer/motion_test
+
+ "S:\Dev\rpi-surveillence\buffer\motion_test"
