@@ -68,11 +68,16 @@ For testing: `cd ../; git pull; cd ./flask_api; docker compose up -d --build;`
 ## Future plans:
 
 First off, currently I have a working surveillance camera! It works and will save videos to my home server. That's a cool thing to have and celebrate (:
-send to hvec folder instead of root
-Add an av1 handling GPU to my server and add in situ AV1 processing 
-    Also testing to find the right settings for good compression and good enough quality. 
-Join videos next to each other? (e.g. partial/part_###, final?) - I think this would be good, especially with the discovered limit of ~100 mb files I can send from the rpi zero 2 w before it breaks. 
+Server:
+    send to temp folder instead of root before processing
+    Add an av1 handling GPU to my server and add in situ AV1 processing 
+        Also testing to find the right settings for good compression and good enough quality. 
+    Join videos next to each other? (e.g. partial/part_###, final?) - I think this would be good, especially with the discovered limit of ~100 mb files I can send from the rpi zero 2 w before it breaks. 
 Rename the repo 🙈
     And rename references to this repo within it. 
-Get Encoding set up (and jupyter or something to de-encode.)
+Rpi:
+    Set up a non-SD card drive to write to?
+        Find out if that's actually better? idk, I think it's flash, still...
+    Get Encoding set up (and jupyter or something to de-encode.)
+At some point re-set-up everything from scratch on a new rpi to make sure it's all repeatable
 Get physical stuff set up? switch, battery, etc.(3d printing?)
