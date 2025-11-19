@@ -37,7 +37,7 @@ logging.basicConfig(
 
 def encode_in_background(input_path, output_path):
     """Run ffmpeg H.265 NVENC encode asynchronously."""
-    logging.info("Running background decode now")
+    logging.info("Running background encode now")
     try:
         subprocess.run([
             "ffmpeg", "-y",
@@ -51,6 +51,33 @@ def encode_in_background(input_path, output_path):
         ], check=True)
         os.remove(input_path)
         logging.info(f"Finished [ENCODED] {output_path}")
+    except subprocess.CalledProcessError as e:
+        logging.warning(f"[ERROR] FFmpeg failed for {input_path}: {e}")
+
+def encode_in_background_av1(input_path, output_path):
+    """Run ffmpeg AV1 NVENC encode asynchronously."""
+    logging.info("Running background encode now")
+    try:
+        subprocess.run([
+            "ffmpeg", "-y",
+            "-hwaccel", "cuda",
+            "-i", input_path,
+
+            # VIDEO: NVIDIA AV1 encoder
+            "-c:v", "av1_nvenc",
+            "-preset", "p7",         # highest quality preset
+            "-cq", "28",             # constant quality (lower=better)
+            "-b:v", "0",             # enables true CQ mode instead of VBR
+
+            # AUDIO
+            "-c:a", "copy",
+
+            output_path
+        ], check=True)
+
+        os.remove(input_path)
+        logging.info(f"Finished [ENCODED] {output_path}")
+
     except subprocess.CalledProcessError as e:
         logging.warning(f"[ERROR] FFmpeg failed for {input_path}: {e}")
 

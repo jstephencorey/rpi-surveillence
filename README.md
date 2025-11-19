@@ -71,13 +71,15 @@ First off, currently I have a working surveillance camera! It works and will sav
 Server:
     send to temp folder instead of root before processing
     Add an av1 handling GPU to my server and add in situ AV1 processing 
+        Let it run on my computer?
         Also testing to find the right settings for good compression and good enough quality. 
+        Need a new server motherboard for that... 🥲
     Join videos next to each other? (e.g. partial/part_###, final?) - I think this would be good, especially with the discovered limit of ~100 mb files I can send from the rpi zero 2 w before it breaks. 
 Rename the repo 🙈
     And rename references to this repo within it. 
 Rpi:
     Set up a non-SD card drive to write to?
         Find out if that's actually better? idk, I think it's flash, still...
-    Get Encoding set up (and jupyter or something to de-encode.)
+    Get Encryption set up (and jupyter or something to decrypt.)
 At some point re-set-up everything from scratch on a new rpi to make sure it's all repeatable
 Get physical stuff set up? switch, battery, etc.(3d printing?)
