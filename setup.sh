@@ -1,11 +1,13 @@
 #!/bin/bash
 set -e
 
-VIDEOS_DIR="/home/piuser/videos"
+TARGET_DIRECTORY="/home/piuser"
+VIDEOS_DIR="$TARGET_DIRECTORY/videos"
+
 
 echo "Creating video directories..."
 mkdir -p -m 755 "$VIDEOS_DIR/buffer" "$VIDEOS_DIR/clips"
-sudo chown -R piuser:piuser /home/piuser/videos
+sudo chown -R piuser:piuser $VIDEOS_DIR
 
 echo "Installing ffmpeg and python libraries..."
 sudo apt install -y ffmpeg python3-opencv python3-numpy python3-dotenv

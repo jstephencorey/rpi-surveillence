@@ -64,6 +64,47 @@ Verify it's working with postman or bruno or something.
 
 For testing: `cd ../; git pull; cd ./flask_api; docker compose up -d --build;` 
 
+### Set up external drive to write to
+
+1. **Connect the External Drive:**
+   - Plug the external drive into your Raspberry Pi.
+
+2. **Identify the Drive:**
+   - Use a command like `lsblk` or `fdisk -l` to list all connected drives and identify the external drive's device name (e.g., `/dev/sda1`).
+
+3. **Create a Mount Point:**
+   - Choose a directory where you want to mount the drive, I used `/mnt/external_drive`. You can create this directory using:
+     ```bash
+     sudo mkdir /mnt/external_drive
+     ```
+
+4. **Mount the Drive:**
+   - Mount the drive to the created directory:
+     ```bash
+     sudo mount /dev/sda1 /mnt/external_drive
+     ```
+
+5. **Set Permissions:**
+   - Ensure the user running your application has write permissions to the mount point:
+     ```bash
+     sudo chown -R piuser:piuser /mnt/external_drive
+     ```
+
+6. **Automate Mounting (Optional):**
+   - To automatically mount the drive on boot, add an entry to `/etc/fstab`. Open the file with:
+     ```bash
+     sudo vim /etc/fstab
+     ```
+   - Add a line like:
+     ```
+     /dev/sda1 /mnt/external_drive ext4 defaults 0 2
+     ```
+   - Adjust the filesystem type (`ext4` in this example) to match your drive's format.
+
+7. **Update Your Application:**
+   - Modify your application to write files to `/mnt/external_drive` instead of the default location.
+
+Would you like more detailed instructions on any of these steps?
 
 ## Future plans:
 

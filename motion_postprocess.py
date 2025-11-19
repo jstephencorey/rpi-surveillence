@@ -7,12 +7,11 @@ import logging
 from pathlib import Path
 import time
 
-BUFFER_DIR = "/home/piuser/videos/buffer"
-OLD_BUFFER_DIR = "/home/piuser/videos/buffer_old"
-TMP_DIR = "/home/piuser/videos/tmp"
-TMP_DIR = "./buffer/motion_test2"
-LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
-CLIP_DIR = "/home/piuser/videos/clips"
+BUFFER_DIR = "/videos/buffer"
+OLD_BUFFER_DIR = "/videos/buffer_old"
+TMP_DIR = "/videos/tmp"
+LOG_FILE = "/videos/logs/motion_detect.log"
+CLIP_DIR = "/videos/clips"
 
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
@@ -26,13 +25,6 @@ MIN_FREE_SPACE = 2 * 1024 * 1024 * 1024  # 2 GB
 IN_PROGRESS = "partial"
 FINAL = "final"
 
-
-os.makedirs(CLIP_DIR, exist_ok=True)
-os.makedirs(BUFFER_DIR, exist_ok=True)
-os.makedirs(OLD_BUFFER_DIR, exist_ok=True)
-os.makedirs(TMP_DIR, exist_ok=True)
-os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
-
 logging.basicConfig(level=logging.DEBUG,
                     format="%(asctime)s [%(levelname)s] %(message)s",
                     handlers=[
@@ -41,6 +33,26 @@ logging.basicConfig(level=logging.DEBUG,
                     ])
 
 logging.debug("test")
+
+
+def get_target_directory():
+    return os.getenv('TARGET_DIRECTORY', '/home/piuser')
+
+def setup():
+    logging.info("running setup")
+    target_dir = get_target_directory()
+    BUFFER_DIR = os.path.join(target_dir, BUFFER_DIR)
+    CLIP_DIR = os.path.join(target_dir, CLIP_DIR)
+    OLD_BUFFER_DIR = os.path.join(target_dir, OLD_BUFFER_DIR)
+    TMP_DIR = os.path.join(target_dir, TMP_DIR)
+    LOG_FILE = os.path.join(target_dir, LOG_FILE)
+
+    os.makedirs(CLIP_DIR, exist_ok=True)
+    os.makedirs(BUFFER_DIR, exist_ok=True)
+    os.makedirs(OLD_BUFFER_DIR, exist_ok=True)
+    os.makedirs(TMP_DIR, exist_ok=True)
+    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+    logging.info("done running setup")
 
 
 def ensure_space_for_video(new_video_path: Path):
@@ -185,6 +197,7 @@ def clear_buffer_dir():
 
 
 if __name__ == "__main__":
+    setup()
     clear_buffer_dir()
     motion_group = []
     processed_segments = set()
