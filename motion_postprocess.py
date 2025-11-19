@@ -121,6 +121,8 @@ def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATI
         ratios.append(ratio)
     logging.info(f"ratios: {[f'{ratio:0.3f}, ' for ratio in ratios]}")
     ratios = [ratio for ratio in ratios if ratio < 0.90] # Remove noisy light issues?
+    if len(ratios) == 0:
+        return True # todo: this isn't the best way to handle all of this, but this handles the edge case if all of the ratios are extremely large. 
     logging.info(f"cleaned ratios: {[f'{ratio:0.3f}, ' for ratio in ratios]}")
     avg_ratio = np.mean(ratios)
     logging.info(f"motion pixel ratio: {avg_ratio:.6f}")

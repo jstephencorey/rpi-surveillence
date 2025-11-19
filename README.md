@@ -43,17 +43,18 @@ Edit `/boot/firmware/config.txt` with `sudo vim /boot/firmware/config.txt` (see 
 check that it recognized the camera with `rpicam-still --list-cameras` (should return something)
 test with `rpicam-hello -t 5000` (won't show anything when headless, but will log things out)
 
-### Set up for recording:
-
 Clone this repo into the rpi: `git clone https://github.com/jstephencorey/rpi-surveillence.git`
 Go into it with `cd rpi-surveillence`
-Make the setup file runnable with `chmod +x setup.sh capture.py motion_postprocess.py`
-Run the setup `sudo ./setup.sh`
-reboot with `sudo reboot`
 
-for testing: `git stash; git pull; chmod +x setup.sh shutdown_services.sh capture.py motion_postprocess.py clip_uploader.py; sudo ./setup.sh`
+### Set up for recording and uploading to a server:
 
-### Set up the upload server:
+Make the setup file runnable with `chmod +x setup.sh capture.py motion_postprocess.py` TODO is this necessary?
+Run the setup `sudo ./setup_upload.sh`
+reboot with `sudo reboot` TODO is this necessary? I think it isn't
+
+for testing: `git stash; git pull; chmod +x setup_local.sh setup_upload.sh shutdown_services.sh capture.py motion_postprocess.py clip_uploader.py; sudo ./setup_upload.sh`
+
+#### Set up the upload server:
 
 This is set up to go on my personal server in a docker container. You'll likely need to change several things (e.g. the attached volume and it's reference in app.py) to make it work for you.
 `git clone https://github.com/jstephencorey/rpi-surveillence.git`
@@ -64,7 +65,9 @@ Verify it's working with postman or bruno or something.
 
 For testing: `cd ../; git pull; cd ./flask_api; docker compose up -d --build;` 
 
-### Set up external drive to write to
+### Set up to write to external drive/flash drive
+
+#### Set up external drive to write to
 
 1. **Connect the External Drive:**
    - Plug the external drive into your Raspberry Pi.
@@ -74,37 +77,25 @@ For testing: `cd ../; git pull; cd ./flask_api; docker compose up -d --build;`
 
 3. **Create a Mount Point:**
    - Choose a directory where you want to mount the drive, I used `/mnt/external_drive`. You can create this directory using:
-     ```bash
-     sudo mkdir /mnt/external_drive
-     ```
+     `sudo mkdir /mnt/external_drive`
 
 4. **Mount the Drive:**
    - Mount the drive to the created directory:
-     ```bash
-     sudo mount /dev/sda1 /mnt/external_drive
-     ```
+     `sudo mount /dev/sda1 /mnt/external_drive`
 
 5. **Set Permissions:**
    - Ensure the user running your application has write permissions to the mount point:
-     ```bash
-     sudo chown -R piuser:piuser /mnt/external_drive
-     ```
+     `sudo chown -R piuser:piuser /mnt/external_drive`
 
 6. **Automate Mounting (Optional):**
    - To automatically mount the drive on boot, add an entry to `/etc/fstab`. Open the file with:
-     ```bash
-     sudo vim /etc/fstab
-     ```
+     `sudo vim /etc/fstab`
    - Add a line like:
-     ```
-     /dev/sda1 /mnt/external_drive ext4 defaults 0 2
-     ```
+     `/dev/sda1 /mnt/external_drive ext4 defaults 0 2`
    - Adjust the filesystem type (`ext4` in this example) to match your drive's format.
 
-7. **Update Your Application:**
-   - Modify your application to write files to `/mnt/external_drive` instead of the default location.
+In order to start it, run `setup_local.sh`
 
-Would you like more detailed instructions on any of these steps?
 
 ## Future plans:
 

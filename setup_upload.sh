@@ -45,8 +45,4 @@ sudo systemctl enable --now capture.service
 sudo systemctl enable --now motion_postprocess.service
 sudo systemctl enable --now clip_uploader.service
 
-# to stop and disable a service for testing:
-# sudo systemctl stop motion_postprocess.service
-# sudo systemctl disable motion_postprocess.service
-
 echo "✅ Setup complete. Recording should start now and at boot."
