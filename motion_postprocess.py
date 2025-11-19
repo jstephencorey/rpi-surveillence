@@ -7,11 +7,12 @@ import logging
 from pathlib import Path
 import time
 
-BUFFER_DIR = "/videos/buffer"
-OLD_BUFFER_DIR = "/videos/buffer_old"
-TMP_DIR = "/videos/tmp"
-LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
-CLIP_DIR = "/videos/clips"
+TARGET_DIR = os.getenv('TARGET_DIRECTORY', '/home/piuser')
+BUFFER_DIR = f"{TARGET_DIR}/videos/buffer"
+OLD_BUFFER_DIR = f"{TARGET_DIR}/videos/buffer_old"
+TMP_DIR = f"{TARGET_DIR}/videos/tmp"
+LOG_FILE = f"/home/piuser/videos/logs/motion_detect.log"
+CLIP_DIR = f"{TARGET_DIR}/videos/clips"
 
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
@@ -25,6 +26,10 @@ MIN_FREE_SPACE = 2 * 1024 * 1024 * 1024  # 2 GB
 IN_PROGRESS = "partial"
 FINAL = "final"
 
+os.makedirs(CLIP_DIR, exist_ok=True)
+os.makedirs(BUFFER_DIR, exist_ok=True)
+os.makedirs(OLD_BUFFER_DIR, exist_ok=True)
+os.makedirs(TMP_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 logging.basicConfig(level=logging.DEBUG,
@@ -35,25 +40,6 @@ logging.basicConfig(level=logging.DEBUG,
                     ])
 
 logging.debug("test")
-
-
-def get_target_directory():
-    return os.getenv('TARGET_DIRECTORY', '/home/piuser')
-
-def setup():
-    logging.info("running setup")
-    target_dir = get_target_directory()
-    BUFFER_DIR = os.path.join(target_dir, BUFFER_DIR)
-    CLIP_DIR = os.path.join(target_dir, CLIP_DIR)
-    OLD_BUFFER_DIR = os.path.join(target_dir, OLD_BUFFER_DIR)
-    TMP_DIR = os.path.join(target_dir, TMP_DIR)
-
-    os.makedirs(CLIP_DIR, exist_ok=True)
-    os.makedirs(BUFFER_DIR, exist_ok=True)
-    os.makedirs(OLD_BUFFER_DIR, exist_ok=True)
-    os.makedirs(TMP_DIR, exist_ok=True)
-    logging.info("done running setup")
-
 
 def ensure_space_for_video(new_video_path: Path):
     """If SD card is too full, delete the new video to prevent overflow."""
@@ -197,7 +183,6 @@ def clear_buffer_dir():
 
 
 if __name__ == "__main__":
-    setup()
     clear_buffer_dir()
     motion_group = []
     processed_segments = set()
