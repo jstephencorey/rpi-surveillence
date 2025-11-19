@@ -10,7 +10,7 @@ import time
 BUFFER_DIR = "/videos/buffer"
 OLD_BUFFER_DIR = "/videos/buffer_old"
 TMP_DIR = "/videos/tmp"
-LOG_FILE = "/videos/logs/motion_detect.log"
+LOG_FILE = "/home/piuser/videos/logs/motion_detect.log"
 CLIP_DIR = "/videos/clips"
 
 SLEEP_INTERVAL=2
@@ -24,6 +24,8 @@ MIN_FREE_SPACE = 2 * 1024 * 1024 * 1024  # 2 GB
 
 IN_PROGRESS = "partial"
 FINAL = "final"
+
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 logging.basicConfig(level=logging.DEBUG,
                     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -45,13 +47,11 @@ def setup():
     CLIP_DIR = os.path.join(target_dir, CLIP_DIR)
     OLD_BUFFER_DIR = os.path.join(target_dir, OLD_BUFFER_DIR)
     TMP_DIR = os.path.join(target_dir, TMP_DIR)
-    LOG_FILE = os.path.join(target_dir, LOG_FILE)
 
     os.makedirs(CLIP_DIR, exist_ok=True)
     os.makedirs(BUFFER_DIR, exist_ok=True)
     os.makedirs(OLD_BUFFER_DIR, exist_ok=True)
     os.makedirs(TMP_DIR, exist_ok=True)
-    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     logging.info("done running setup")
 
 
