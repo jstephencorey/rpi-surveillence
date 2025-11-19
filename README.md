@@ -18,7 +18,7 @@ Select Raspberry Pi OS Lite (64-bit).
 Configure advanced settings:
     Enable SSH
     Set username/password (most of this assumes a username of `piuser`)
-    Configure WiFi (SSID + password + country)
+    Configure WiFi (SSID + password + country(?))
     Set hostname (e.g., pi-cam)
 
 Flash to microSD and boot the Pi.
@@ -27,7 +27,7 @@ Flash to microSD and boot the Pi.
 `ssh piuser@pi-cam.local`
 (or use the Pi’s IP address)
 
-`sudo apt update && sudo apt upgrade -y`
+`sudo apt update && sudo apt upgrade -y` (this will take a while)
 
 verify has rpicam:
 `which rpicam-still` should return something.
