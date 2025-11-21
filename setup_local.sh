@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-TARGET_DIRECTORY="/mnt/external_drive"
+
+export TARGET_DIRECTORY="/mnt/external_drive"
 VIDEOS_DIR="$TARGET_DIRECTORY/videos"
 
-
-echo "Creating video directories..."
+echo "Creating video directories in $VIDEOS_DIR..."
 mkdir -p -m 755 "$VIDEOS_DIR/buffer" "$VIDEOS_DIR/clips"
 sudo chown -R piuser:piuser $VIDEOS_DIR
 

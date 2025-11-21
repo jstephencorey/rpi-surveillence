@@ -3,6 +3,7 @@ Description=Motion Post-Processing Service
 After=network.target
 
 [Service]
+EnvironmentFile=/home/piuser/rpi-surveillence/.env
 User=piuser
 Group=piuser
 WorkingDirectory=/home/piuser

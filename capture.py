@@ -5,7 +5,8 @@ import signal
 import logging
 import time
 
-BUFFER_DIR = "/home/piuser/videos/buffer"
+TARGET_DIR = os.getenv('TARGET_DIRECTORY', '/home/piuser')
+BUFFER_DIR = f"{TARGET_DIR}/videos/buffer"
 LOG_FILE = "/home/piuser/videos/logs/capture.log"
 
 HQ_WIDTH = "1920"
@@ -23,15 +24,20 @@ INITIAL_PAUSE_SECS = 10 # (wait to clear the buffer dir, start up everything, et
 os.makedirs(BUFFER_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
-logging.basicConfig(filename=LOG_FILE,
-                    level=logging.INFO,
-                    format="%(asctime)s [%(levelname)s] %(message)s")
+
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s [%(levelname)s] %(message)s",
+                    handlers=[
+                        logging.FileHandler(LOG_FILE),
+                        logging.StreamHandler()  # ensures output appears in journalctl/systemd logs
+                    ])
 
 def main():
     logging.info(f"Pausing for {INITIAL_PAUSE_SECS} secs to let things set up")
     time.sleep(INITIAL_PAUSE_SECS)
     logging.info("Starting capture loop...")
     segment_pattern = os.path.join(BUFFER_DIR, "segment_%06d.h264")
+    logging.debug(f"writing the output to {BUFFER_DIR}")
 
     cmd = [
         "rpicam-vid",
@@ -43,7 +49,8 @@ def main():
         "--output", segment_pattern,
         "--intra", str(HQ_INTRA),
         "--timeout", "0",  # run indefinitely
-        "--codec", "h264"
+        "--codec", "h264",
+        "--nopreview",
     ]
 
     process = subprocess.Popen(cmd)

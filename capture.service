@@ -3,6 +3,7 @@ Description=Raspberry Pi Video Capture
 After=network.target
 
 [Service]
+EnvironmentFile=/home/piuser/rpi-surveillence/.env
 ExecStart=/usr/bin/python3 /home/piuser/rpi-surveillence/capture.py
 Restart=always
 User=piuser
