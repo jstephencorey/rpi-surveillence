@@ -38,7 +38,7 @@ Edit `/boot/firmware/config.txt` with `sudo vim /boot/firmware/config.txt` (see 
     change `camera_auto_detect=1` to `camera_auto_detect=0`
     Locate the line [all] and add the following line below it:
         `dtoverlay=imx708` (you may need it to be different depending on what camera you have. Check out the arducam docs for more info)
-    reboot with `sudo reboot`
+    reboot with `sudo reboot` (optional)
 
 check that it recognized the camera with `rpicam-still --list-cameras` (should return something)
 test with `rpicam-hello -t 5000` (won't show anything when headless, but will log things out)
@@ -48,7 +48,7 @@ Go into it with `cd rpi-surveillence`
 
 ### Set up for recording and uploading to a server:
 
-Make the setup file runnable with `chmod +x setup.sh capture.py motion_postprocess.py` TODO is this necessary?
+Make the setup file runnable with `chmod +x setup_local.sh setup_upload.sh shutdown_services.sh capture.py motion_postprocess.py clip_uploader.py` 
 Run the setup `sudo ./setup_upload.sh`
 reboot with `sudo reboot` TODO is this necessary? I think it isn't
 
@@ -91,8 +91,8 @@ For testing: `cd ../; git pull; cd ./flask_api; docker compose up -d --build;`
    - To automatically mount the drive on boot, add an entry to `/etc/fstab`. Open the file with:
      `sudo vim /etc/fstab`
    - Add a line like:
-     `/dev/sda1 /mnt/external_drive ext4 defaults 0 2`
-   - Adjust the filesystem type (`ext4` in this example) to match your drive's format.
+     `UUID=<the uuid you can see with blkid or something>   \mnt\external_drive exfat   defaults,uid=piuser,gid=piuser,umask=000,nofail 0   0`
+   - Adjust the filesystem type (`exfat` in this example) to match your drive's format. I'm using exfat to be able to open it on windows.
 
 In order to start it, run `setup_local.sh`
 
