@@ -1,0 +1,17 @@
+[Unit]
+Description=Motion Post-Processing Service for uploading
+After=network.target
+
+[Service]
+User=piuser
+Group=piuser
+WorkingDirectory=/home/piuser
+ExecStart=/usr/bin/python3 -O /home/piuser/rpi-surveillence/motion_postprocess_upload.py
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=motion_postprocess_upload
+
+[Install]
+WantedBy=multi-user.target

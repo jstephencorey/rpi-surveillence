@@ -1,0 +1,17 @@
+[Unit]
+Description=Motion Post-Processing Service for saving locally
+After=network.target
+
+[Service]
+User=piuser
+Group=piuser
+WorkingDirectory=/home/piuser
+ExecStart=/usr/bin/python3 -O /home/piuser/rpi-surveillence/motion_postprocess_local.py
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=motion_postprocess_local
+
+[Install]
+WantedBy=multi-user.target

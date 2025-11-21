@@ -1,0 +1,14 @@
+[Unit]
+Description=Raspberry Pi Video Capture for uploading
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/piuser/rpi-surveillence/capture_upload.py
+Restart=always
+User=piuser
+RestartSec=5
+WorkingDirectory=/home/piuser
+SyslogIdentifier=capture_upload
+
+[Install]
+WantedBy=multi-user.target

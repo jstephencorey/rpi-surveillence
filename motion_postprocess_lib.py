@@ -7,12 +7,7 @@ import logging
 from pathlib import Path
 import time
 
-TARGET_DIR = os.getenv('TARGET_DIRECTORY', '/home/piuser')
-BUFFER_DIR = f"{TARGET_DIR}/videos/buffer"
-OLD_BUFFER_DIR = f"{TARGET_DIR}/videos/buffer_old"
-TMP_DIR = f"{TARGET_DIR}/videos/tmp"
 LOG_FILE = f"/home/piuser/videos/logs/motion_detect.log"
-CLIP_DIR = f"{TARGET_DIR}/videos/clips"
 
 SLEEP_INTERVAL=2
 PIXEL_THRESHOLD=10
@@ -26,10 +21,6 @@ MIN_FREE_SPACE = 2 * 1024 * 1024 * 1024  # 2 GB
 IN_PROGRESS = "partial"
 FINAL = "final"
 
-os.makedirs(CLIP_DIR, exist_ok=True)
-os.makedirs(BUFFER_DIR, exist_ok=True)
-os.makedirs(OLD_BUFFER_DIR, exist_ok=True)
-os.makedirs(TMP_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 logging.basicConfig(level=logging.DEBUG,
@@ -41,10 +32,10 @@ logging.basicConfig(level=logging.DEBUG,
 
 logging.debug("test")
 
-def ensure_space_for_video(new_video_path: Path):
+def ensure_space_for_video(new_video_path: Path, clip_dir):
     """If SD card is too full, delete the new video to prevent overflow."""
     try:
-        stat = shutil.disk_usage(CLIP_DIR)
+        stat = shutil.disk_usage(clip_dir)
         free_space = stat.free
 
         if free_space < MIN_FREE_SPACE:
@@ -65,11 +56,11 @@ def ensure_space_for_video(new_video_path: Path):
         logging.error(f"Error checking disk space: {e}")
         return False
 
-def extract_sample_frames(input_path):
+def extract_sample_frames(input_path, tmp_dir):
     """Efficiently extract sample frames directly from .h264 via ffmpeg pipe."""
     logging.debug(f"Extracting sample frames (optimized) from {input_path}")
     vf_filter = f"scale={LQ_WIDTH}:{LQ_HEIGHT},format=yuv420p"
-    output_pattern = os.path.join(TMP_DIR, "frame_%04d.jpg")
+    output_pattern = os.path.join(tmp_dir, "frame_%04d.jpg")
     cmd = [
         "ffmpeg", "-hide_banner", 
         "-loglevel", "warning",
@@ -87,8 +78,8 @@ def extract_sample_frames(input_path):
 
     # Read frames back into memory
     frames = []
-    for file in os.listdir(TMP_DIR):
-        path = os.path.join(TMP_DIR, file)
+    for file in os.listdir(tmp_dir):
+        path = os.path.join(tmp_dir, file)
         frame = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         if frame is not None:
             frames.append(frame)
@@ -129,7 +120,7 @@ def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATI
     return avg_ratio > change_ratio
 
 # === Save clip ===
-def save_clip(segments, additional_note=None):
+def save_clip(segments,  clip_dir, tmp_dir, additional_note=None,):
     """Concatenate motion segments into a single mp4 clip."""
     if not segments:
         return
@@ -137,16 +128,16 @@ def save_clip(segments, additional_note=None):
     clip_file_extension = ".mp4"
     clip_name = f"clip_{first_clip_number}"
     iter_num = 1 # doesn't overwrite files when the device resets.
-    while (os.path.exists(os.path.join(CLIP_DIR, clip_name+f"_{iter_num}"+clip_file_extension))):
+    while (os.path.exists(os.path.join(clip_dir, clip_name+f"_{iter_num}"+clip_file_extension))):
         iter_num += 1
     clip_name = clip_name+f"_{iter_num}"
     if additional_note is not None:
         clip_name = clip_name + f"_{additional_note}"
     clip_name = clip_name+clip_file_extension
-    clip_path = os.path.join(CLIP_DIR, clip_name)
+    clip_path = os.path.join(clip_dir, clip_name)
 
     try:
-        with open(os.path.join(TMP_DIR, "segments.txt"), "w") as f:
+        with open(os.path.join(tmp_dir, "segments.txt"), "w") as f:
             for s in segments:
                 f.write(f"file '{s}'\n")
 
@@ -154,7 +145,7 @@ def save_clip(segments, additional_note=None):
 
         result = subprocess.run([
             "ffmpeg", "-f", "concat", "-safe", "0",
-            "-i", os.path.join(TMP_DIR, "segments.txt"), "-c", "copy",
+            "-i", os.path.join(tmp_dir, "segments.txt"), "-c", "copy",
             clip_path, "-y"
         ], capture_output=True, text=True)
 
@@ -170,28 +161,27 @@ def save_clip(segments, additional_note=None):
         logging.exception(f"Error while saving clip: {e}")
 
 
-def clear_buffer_dir():
+def clear_buffer_dir(buffer_dir, old_buffer_dir):
     logging.info("Removing segments")
-    segments = os.listdir(BUFFER_DIR)
+    segments = os.listdir(buffer_dir)
     for segment in segments:
         if "segment_000000.h264" in segment or "segment_000001.h264" in segment:
             logging.info(f"Skipping segment {segment} for removal")
             continue #Skip the first currently-recorded videos. 
         else:
             logging.info(f"Removing segment {segment}")
-            src = os.path.join(BUFFER_DIR, segment)
-            dest = os.path.join(OLD_BUFFER_DIR, segment)
+            src = os.path.join(buffer_dir, segment)
+            dest = os.path.join(old_buffer_dir, segment)
             os.rename(src, dest) # Note that this may overwrite some clips, this is currently acceptable choice. 
 
 
-if __name__ == "__main__":
-    clear_buffer_dir()
+def run_motion_process_for_buffer(buffer_dir, clip_dir, tmp_dir):
     motion_group = []
     processed_segments = set()
     motion_run_continuation = False
     while True:
         try:
-            segments = sorted(os.listdir(BUFFER_DIR)) #assumes a sortable order
+            segments = sorted(os.listdir(buffer_dir)) #assumes a sortable order
             # Skip already processed
             segments = [s for s in segments if s not in processed_segments]
             if not segments:
@@ -201,19 +191,19 @@ if __name__ == "__main__":
 
             for i, seg in enumerate(segments):
                 logging.debug(f"Processing segment #{i}, {seg}")
-                seg_path = os.path.join(BUFFER_DIR, seg)
+                seg_path = os.path.join(buffer_dir, seg)
                 # Always skip last one (may still be writing)
                 if i == (len(segments) - 1):
                     logging.debug("Reached the end of the segments")
                     time.sleep(SLEEP_INTERVAL)
                     break
 
-                if not ensure_space_for_video(Path(seg_path)):
+                if not ensure_space_for_video(Path(seg_path), clip_dir=clip_dir):
                     logging.warning("Not enough space, new file deleted")
                     time.sleep(SLEEP_INTERVAL)
                     break
 
-                frames = extract_sample_frames(seg_path)
+                frames = extract_sample_frames(seg_path, tmp_dir=tmp_dir)
                 motion = detect_motion(frames)
                 if motion:
                     logging.debug(f"Adding segment #{i}, {seg} to the motion group")
@@ -221,15 +211,15 @@ if __name__ == "__main__":
                     if len(motion_group) > FLUSH_N_CLIPS:
                         logging.debug(f"Flushing all current motion group segments to a clip despite motion being detected")
                         motion_group_to_save = motion_group[:-1]
-                        save_clip(motion_group_to_save, IN_PROGRESS)
+                        save_clip(motion_group_to_save, clip_dir=clip_dir, tmp_dir=tmp_dir, additional_note=IN_PROGRESS)
                         motion_group = [motion_group[-1]] # motion_group = [seg_path] #note that this prioritizes cohesive video viewing over later recompilation into one big video. Think about changing later todo
                         motion_run_continuation = True
                 else:
                     logging.debug(f"Saving all current motion group segments to a clip")
                     if motion_run_continuation:
-                        save_clip(motion_group, FINAL)
+                        save_clip(motion_group, clip_dir=clip_dir, tmp_dir=tmp_dir, additional_note=FINAL)
                     else:
-                        save_clip(motion_group)
+                        save_clip(motion_group, clip_dir=clip_dir, tmp_dir=tmp_dir)
                     motion_group = []
                     os.remove(seg_path)
                     logging.debug(f"Removed non-motion segment: {seg_path}")
