@@ -6,6 +6,10 @@ import shutil
 import logging
 from pathlib import Path
 import time
+import uuid
+import requests
+import email.utils
+from zoneinfo import ZoneInfo
 
 LOG_FILE = f"/home/piuser/videos/logs/motion_detect.log"
 
@@ -20,6 +24,8 @@ MIN_FREE_SPACE = 2 * 1024 * 1024 * 1024  # 2 GB
 
 IN_PROGRESS = "partial"
 FINAL = "final"
+
+DEVICE_ID = f"devId{hex(uuid.getnode())[2:10]}"
 
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
@@ -119,22 +125,56 @@ def detect_motion(frames, pixel_thresh=PIXEL_THRESHOLD, change_ratio=CHANGE_RATI
     logging.info(f"motion pixel ratio: {avg_ratio:.6f}")
     return avg_ratio > change_ratio
 
+def get_timestamp():
+    """
+    Sends a HEAD request to Google and extracts the HTTP Date header.
+    Converts the result to America/Denver.
+    Returns a timezone-aware datetime if successful, otherwise None.
+    """
+    try:
+        resp = requests.head("https://www.google.com", timeout=3)
+        resp.raise_for_status()
+
+        date_header = resp.headers.get("Date")
+        if not date_header:
+            return None
+
+        # Parse RFC 2822 date header → UTC datetime
+        dt_utc = email.utils.parsedate_to_datetime(date_header)
+
+        # Convert to Denver
+        timezone = ZoneInfo("America/Denver")
+        dt_tz = dt_utc.astimezone(timezone)
+
+        formatted = dt_tz.strftime("%Y%m%d-%H%M%S")
+        return formatted
+
+    except Exception:
+        return None
+
+def get_output_file_name(segments, 
+                         motion_group_id=None, 
+                         additional_note=None):
+    first_clip_number = os.path.basename(segments[0]).replace('segment_', '').replace('.h264','')
+
+    clip_id = f"clipId{first_clip_number}-{uuid.uuid1().hex[:5]}"
+
+    timestampstr = get_timestamp()
+    
+    output_file_name = f"{DEVICE_ID}_{timestampstr}_{clip_id}_{additional_note}_{motion_group_id}.mp4"
+
+    return output_file_name
+
 # === Save clip ===
-def save_clip(segments,  clip_dir, tmp_dir, additional_note=None,):
+def save_clip(segments,  
+              clip_dir, 
+              tmp_dir, 
+              output_clip_name):
     """Concatenate motion segments into a single mp4 clip."""
     if not segments:
         return
-    first_clip_number = os.path.basename(segments[0]).replace('segment_', '').replace('.h264','')
-    clip_file_extension = ".mp4"
-    clip_name = f"clip_{first_clip_number}"
-    iter_num = 1 # doesn't overwrite files when the device resets.
-    while (os.path.exists(os.path.join(clip_dir, clip_name+f"_{iter_num}"+clip_file_extension))):
-        iter_num += 1
-    clip_name = clip_name+f"_{iter_num}"
-    if additional_note is not None:
-        clip_name = clip_name + f"_{additional_note}"
-    clip_name = clip_name+clip_file_extension
-    clip_path = os.path.join(clip_dir, clip_name)
+    
+    clip_path = os.path.join(clip_dir, output_clip_name)
 
     try:
         with open(os.path.join(tmp_dir, "segments.txt"), "w") as f:
@@ -142,7 +182,7 @@ def save_clip(segments,  clip_dir, tmp_dir, additional_note=None,):
                 f.write(f"file '{s}'\n")
 
         logging.info(f"Creating clip from {len(segments)} segments → {clip_path}")
-
+        
         result = subprocess.run([
             "ffmpeg", "-f", "concat", "-safe", "0",
             "-i", os.path.join(tmp_dir, "segments.txt"), "-c", "copy",
@@ -174,11 +214,17 @@ def clear_buffer_dir(buffer_dir, old_buffer_dir):
             dest = os.path.join(old_buffer_dir, segment)
             os.rename(src, dest) # Note that this may overwrite some clips, this is currently acceptable choice. 
 
+def get_motion_group_id_if_not_exist(motion_group_id):
+    if not motion_group_id:
+        return uuid.uuid1().hex[:5]
+    else:
+        return motion_group_id
 
 def run_motion_process_for_buffer(buffer_dir, clip_dir, tmp_dir):
     motion_group = []
     processed_segments = set()
     motion_run_continuation = False
+    motion_group_id = ""
     while True:
         try:
             segments = sorted(os.listdir(buffer_dir)) #assumes a sortable order
@@ -211,15 +257,33 @@ def run_motion_process_for_buffer(buffer_dir, clip_dir, tmp_dir):
                     if len(motion_group) > FLUSH_N_CLIPS:
                         logging.debug(f"Flushing all current motion group segments to a clip despite motion being detected")
                         motion_group_to_save = motion_group[:-1]
-                        save_clip(motion_group_to_save, clip_dir=clip_dir, tmp_dir=tmp_dir, additional_note=IN_PROGRESS)
+                        output_clip_name = get_output_file_name(motion_group_to_save,
+                                                                motion_group_id=get_motion_group_id_if_not_exist(motion_group_id),
+                                                                additional_note=IN_PROGRESS)
+                        save_clip(motion_group_to_save, 
+                                  clip_dir=clip_dir, 
+                                  tmp_dir=tmp_dir,
+                                  output_clip_name=output_clip_name)
                         motion_group = [motion_group[-1]] # motion_group = [seg_path] #note that this prioritizes cohesive video viewing over later recompilation into one big video. Think about changing later todo
                         motion_run_continuation = True
                 else:
                     logging.debug(f"Saving all current motion group segments to a clip")
                     if motion_run_continuation:
-                        save_clip(motion_group, clip_dir=clip_dir, tmp_dir=tmp_dir, additional_note=FINAL)
+                        output_clip_name = get_output_file_name(motion_group,
+                                                                motion_group_id=get_motion_group_id_if_not_exist(motion_group_id),
+                                                                additional_note=FINAL)
+                        save_clip(motion_group, 
+                                  clip_dir=clip_dir, 
+                                  tmp_dir=tmp_dir, 
+                                  output_clip_name=output_clip_name)
                     else:
-                        save_clip(motion_group, clip_dir=clip_dir, tmp_dir=tmp_dir)
+                        output_clip_name = get_output_file_name(motion_group,
+                                                                motion_group_id=get_motion_group_id_if_not_exist(motion_group_id),
+                                                                additional_note=None)
+                        save_clip(motion_group, 
+                                  clip_dir=clip_dir, 
+                                  tmp_dir=tmp_dir, 
+                                  output_clip_name=output_clip_name)
                     motion_group = []
                     os.remove(seg_path)
                     logging.debug(f"Removed non-motion segment: {seg_path}")

@@ -7,6 +7,8 @@ import pytz
 import uuid
 import threading
 from zoneinfo import ZoneInfo
+import re
+import pytz
 
 # Load environment variables
 load_dotenv()
@@ -14,6 +16,8 @@ load_dotenv()
 
 OUTPUT_DIR = "/data/video"
 INCOMING_DIR = os.path.join(OUTPUT_DIR, "incoming")
+LOW_QUALITY = "44" #Found through testing to be a as low as I could reasonably go without loosing too much quality
+
 
 os.makedirs(INCOMING_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -54,32 +58,69 @@ def encode_in_background(input_path, output_path):
     except subprocess.CalledProcessError as e:
         logging.warning(f"[ERROR] FFmpeg failed for {input_path}: {e}")
 
-def encode_in_background_av1(input_path, output_path):
+def encode_in_background_av1(input_path, av1_output_path):
     """Run ffmpeg AV1 NVENC encode asynchronously."""
     logging.info("Running background encode now")
+    print("Converting", input_path, "to", av1_output_path)
+    assert not os.path.exists(av1_output_path)
+
     try:
-        subprocess.run([
-            "ffmpeg", "-y",
-            "-hwaccel", "cuda",
+        result = subprocess.run(
+                    [
+            "ffmpeg",
+            "-y",
+
+            # Hardware acceleration: VAAPI on DG2
+            "-hwaccel", "vaapi",
+            "-hwaccel_output_format", "vaapi",
+            "-vaapi_device", "/dev/dri/renderD129",
             "-i", input_path,
 
-            # VIDEO: NVIDIA AV1 encoder
-            "-c:v", "av1_nvenc",
-            "-preset", "p7",         # highest quality preset
-            "-cq", "28",             # constant quality (lower=better)
-            "-b:v", "0",             # enables true CQ mode instead of VBR
+            # VIDEO: Intel Arc AV1 encoder (VAAPI)
+            "-c:v", "av1_vaapi",
+            "-qp", LOW_QUALITY,                  # constant quality
+            "-vf", "format=nv12,hwupload,hqdn3d=1.5:1.5:6:6",
 
             # AUDIO
             "-c:a", "copy",
 
-            output_path
-        ], check=True)
-
-        os.remove(input_path)
-        logging.info(f"Finished [ENCODED] {output_path}")
-
+            av1_output_path
+        ],
+            check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True
+        )
+        logging.debug(result.stdout)
+        logging.debug(result.stderr)
+        logging.info(f"Finished [ENCODED] {av1_output_path}")
     except subprocess.CalledProcessError as e:
-        logging.warning(f"[ERROR] FFmpeg failed for {input_path}: {e}")
+        logging.error(f"[ERROR] FFmpeg failed for {input_path}")
+        logging.error(f"Return code: {e.returncode}")
+        logging.error("--- FFmpeg stdout ---" + e.stdout + "--- FFmpeg stderr ---" + e.stderr)
+
+
+def get_time_from_filename(filename):
+    tz = pytz.timezone(os.getenv("TIMEZONE", "America/Denver"))
+    # Extract the first datetime-like part: YYYYMMDD_HHMMSS
+    m = re.search(r"(\d{8})-(\d{6})", filename)
+    date_part, time_part = m.group(1), m.group(2)
+
+    # Parse into a datetime
+    dt = datetime.strptime(f"{date_part}{time_part}", "%Y%m%d%H%M%S")
+    dt = tz.localize(dt)
+    return dt.isoformat()
+
+def get_video_info(video_filename):
+    # output_file_name = f"{DEVICE_ID}_{timestampstr}_{clip_id}_{additional_note}_{motion_group_id}.mp4"
+    # Save incoming file
+    base_name = os.path.basename(video_filename)
+    parts = base_name.split("_")
+    device_id = parts[0]
+    timestamp_str = parts[1]
+    timestamp_iso = get_time_from_filename(video_filename)
+    clip_id = parts[2]
+    additional_note = parts[3]
+    motion_group_id = parts[4]
+
+    return device_id, timestamp_str, timestamp_iso, clip_id, additional_note, motion_group_id
 
 
 @app.route("/upload_clip", methods=["POST"])
@@ -94,19 +135,19 @@ def upload_clip():
         logging.warning("Empty filename")
         return jsonify({"error": "Empty filename"}), 400
 
-    # Save incoming file
-    base_name = os.path.splitext(os.path.basename(file.filename))[0]
-    timestamp = datetime.now(ZoneInfo("America/Denver")).strftime("%Y%m%d_%H%M%S")
+    device_id, timestamp_str, timestamp_iso, clip_id, additional_note, motion_group_id = get_video_info(file.filename)
 
-    temp_path = os.path.join(INCOMING_DIR, f"{timestamp}_{base_name}.mp4")
+    output_file_name = f"{device_id}_{timestamp_str}_{clip_id}_{additional_note}_{motion_group_id}.mp4"
+
+    temp_path = os.path.join(INCOMING_DIR, output_file_name)
     file.save(temp_path)
 
-    output_path = os.path.join(OUTPUT_DIR, f"{timestamp}_{base_name}.mp4")
+    output_path = os.path.join(OUTPUT_DIR, output_file_name)
     logging.info(f"Saving to Output {output_path}")
     # This is an option that doesn't encode it at all, and will let my home computer do all of that
     os.rename(temp_path, output_path)
     # Spawn encoding in background to encode with h265
-    # threading.Thread(target=encode_in_background, args=(temp_path, output_path)).start()
+    threading.Thread(target=encode_in_background_av1, args=(temp_path, output_path)).start()
 
     return jsonify({
         "status": "uploaded",
