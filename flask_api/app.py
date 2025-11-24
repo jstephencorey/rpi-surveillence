@@ -157,7 +157,6 @@ def upload_clip():
 
 
 
-
 # Load secrets from .env
 SECRET_KEY = os.getenv("SECRET_KEY")
 IMMICH_API_KEY = os.getenv("IMMICH_API_KEY")

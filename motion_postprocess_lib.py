@@ -155,6 +155,8 @@ def get_timestamp():
 def get_output_file_name(segments, 
                          motion_group_id=None, 
                          additional_note=None):
+    if (len(segments)) == 0:
+        return None
     first_clip_number = os.path.basename(segments[0]).replace('segment_', '').replace('.h264','')
 
     clip_id = f"clipId{first_clip_number}-{uuid.uuid1().hex[:5]}"
@@ -182,7 +184,7 @@ def save_clip(segments,
                 f.write(f"file '{s}'\n")
 
         logging.info(f"Creating clip from {len(segments)} segments → {clip_path}")
-        
+
         result = subprocess.run([
             "ffmpeg", "-f", "concat", "-safe", "0",
             "-i", os.path.join(tmp_dir, "segments.txt"), "-c", "copy",
