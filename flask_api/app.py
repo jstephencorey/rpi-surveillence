@@ -78,7 +78,7 @@ def encode_in_background_av1(input_path, av1_output_path):
 
             # VIDEO: Intel Arc AV1 encoder (VAAPI)
             "-c:v", "av1_vaapi",
-            "-global_quality", "32"     #Need to figure out a good number here...             # constant quality
+            "-global_quality", "35"     #Need to figure out a good number here. 35 is low quality but doable             # constant quality
             # "-vf", "format=nv12,hwupload,hqdn3d=1.5:1.5:6:6",
 
             # AUDIO
