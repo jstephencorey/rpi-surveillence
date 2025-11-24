@@ -50,7 +50,7 @@ def encode_in_background(input_path, output_path):
             "-c:v", "hevc_nvenc",
             "-preset", "p7",       # very slow, highest quality
             "-cq", "28",           # constant quality (lower = higher quality)
-            "-c:a", "copy", # copy audio
+            "-c:a", "copy",         # copy audio
             output_path
         ], check=True)
         os.remove(input_path)
@@ -65,8 +65,7 @@ def encode_in_background_av1(input_path, av1_output_path):
     assert not os.path.exists(av1_output_path)
 
     try:
-        result = subprocess.run(
-                    [
+        cmd = [
             "ffmpeg",
             "-y",
 
@@ -85,7 +84,10 @@ def encode_in_background_av1(input_path, av1_output_path):
             "-c:a", "copy",
 
             av1_output_path
-        ],
+        ]
+
+        result = subprocess.run(
+            cmd,
             check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True
         )
         logging.debug(result.stdout)
@@ -135,12 +137,12 @@ def upload_clip():
         logging.warning("Empty filename")
         return jsonify({"error": "Empty filename"}), 400
 
+    temp_path = os.path.join(INCOMING_DIR, file.filename)
+    file.save(temp_path)
+
     device_id, timestamp_str, timestamp_iso, clip_id, additional_note, motion_group_id = get_video_info(file.filename)
 
-    output_file_name = f"{device_id}_{timestamp_str}_{clip_id}_{additional_note}_{motion_group_id}.mkv"
-
-    temp_path = os.path.join(INCOMING_DIR, output_file_name)
-    file.save(temp_path)
+    output_file_name = f"{device_id}_{timestamp_str}_{clip_id}_{additional_note}_{motion_group_id}.mp4"
 
     output_path = os.path.join(OUTPUT_DIR, output_file_name)
     logging.info(f"Saving to Output {output_path}")
