@@ -111,7 +111,7 @@ def get_time_from_filename(filename):
 def get_video_info(video_filename):
     # output_file_name = f"{DEVICE_ID}_{timestampstr}_{clip_id}_{additional_note}_{motion_group_id}.mp4"
     # Save incoming file
-    base_name = os.path.basename(video_filename)
+    base_name = os.path.basename(video_filename).replace(".mp4","")
     parts = base_name.split("_")
     device_id = parts[0]
     timestamp_str = parts[1]
