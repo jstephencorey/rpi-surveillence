@@ -8,12 +8,7 @@ services:
     restart: 'unless-stopped'
     volumes:
       - /zstorage/surveillance_video:/data/video
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-    runtime: nvidia
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
+    group_add:
+      - '993'
+    devices:
+      - /dev/dri/renderD129:/dev/dri/renderD129
