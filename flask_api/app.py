@@ -78,8 +78,8 @@ def encode_in_background_av1(input_path, av1_output_path):
 
             # VIDEO: Intel Arc AV1 encoder (VAAPI)
             "-c:v", "av1_vaapi",
-            "-qp", LOW_QUALITY,                  # constant quality
-            "-vf", "format=nv12,hwupload,hqdn3d=1.5:1.5:6:6",
+            "-global_quality", "32"     #Need to figure out a good number here...             # constant quality
+            # "-vf", "format=nv12,hwupload,hqdn3d=1.5:1.5:6:6",
 
             # AUDIO
             "-c:a", "copy",
@@ -137,7 +137,7 @@ def upload_clip():
 
     device_id, timestamp_str, timestamp_iso, clip_id, additional_note, motion_group_id = get_video_info(file.filename)
 
-    output_file_name = f"{device_id}_{timestamp_str}_{clip_id}_{additional_note}_{motion_group_id}.mp4"
+    output_file_name = f"{device_id}_{timestamp_str}_{clip_id}_{additional_note}_{motion_group_id}.mkv"
 
     temp_path = os.path.join(INCOMING_DIR, output_file_name)
     file.save(temp_path)
@@ -145,7 +145,7 @@ def upload_clip():
     output_path = os.path.join(OUTPUT_DIR, output_file_name)
     logging.info(f"Saving to Output {output_path}")
     # This is an option that doesn't encode it at all, and will let my home computer do all of that
-    os.rename(temp_path, output_path)
+    # os.rename(temp_path, output_path)
     # Spawn encoding in background to encode with h265
     threading.Thread(target=encode_in_background_av1, args=(temp_path, output_path)).start()
 
