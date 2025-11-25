@@ -68,21 +68,14 @@ def encode_in_background_av1(input_path, av1_output_path):
         cmd = [
             "ffmpeg",
             "-y",
-
-            # Hardware acceleration: VAAPI on DG2
-            "-hwaccel", "vaapi",
-            "-hwaccel_output_format", "vaapi",
-            "-vaapi_device", "/dev/dri/renderD129",
+            "-hwaccel_output_format", "qsv",
             "-i", input_path,
-
-            # VIDEO: Intel Arc AV1 encoder (VAAPI)
-            "-c:v", "av1_vaapi",
-            "-global_quality", "35"     #Need to figure out a good number here. 35 is low quality but doable             # constant quality
-            # "-vf", "format=nv12,hwupload,hqdn3d=1.5:1.5:6:6",
-
-            # AUDIO
+            "-init_hw_device", "qsv=va:/dev/dri/renderD129",
+            "-vf", "hqdn3d=3:3:6:6",
+            "-c:v", "av1_qsv",
+            "-preset", "veryslow",
+            "-global_quality", "25", #the lowest I can go without meaningfully sacrificing quality
             "-c:a", "copy",
-
             av1_output_path
         ]
 
