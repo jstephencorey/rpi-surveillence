@@ -70,7 +70,7 @@ def encode_in_background_av1(input_path, av1_output_path):
             "-y",
             "-hwaccel_output_format", "qsv",
             "-i", input_path,
-            "-init_hw_device", "qsv=va:/dev/dri/renderD129",
+            # "-init_hw_device", "qsv=va:/dev/dri/renderD129",
             "-vf", "hqdn3d=3:3:6:6",
             "-c:v", "av1_qsv",
             "-preset", "veryslow",
