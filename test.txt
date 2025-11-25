@@ -261,4 +261,22 @@ rpicam-vid \
 
 rsync -avP --remove-source-files piuser@192.168.0.64:~/videos/motion_test/* /mnt/s/Dev/rpi-surveillence/buffer/motion_test
 
+ffmpeg -init_hw_device qsv=hw:/dev/dri/renderD129 -f lavfi -i testsrc2 -c:v av1_qsv -t 1 out.mp4
+
+ffmpeg -hwaccel vaapi -hwaccel_device /dev/dri/renderD129 -i 20251123_135204_clip_002107_1_final.mp4 -vf 'format=nv12,hwupload' -c:v av1_vaapi out1.mp4
+
+ffmpeg \
+  -y \
+  -hwaccel vaapi \
+  -hwaccel_device /dev/dri/renderD129 \
+  -i 20251123_163348_clip_002550_1.mp4 \
+  -vf "hqdn3d=3:3:6:6,format=nv12,hwupload" \
+  -c:v av1_vaapi \
+  -global_quality 35 \
+  -low_power 0 \
+  -profile:v 0 \
+  -c:a copy \
+  output_vaapi_35_denoise2.mkv
+
+
  "S:\Dev\rpi-surveillence\buffer\motion_test"

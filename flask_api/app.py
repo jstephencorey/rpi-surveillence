@@ -68,13 +68,14 @@ def encode_in_background_av1(input_path, av1_output_path):
         cmd = [
             "ffmpeg",
             "-y",
-            "-hwaccel_output_format", "qsv",
+            "-hwaccel", "vaapi",
+            "-hwaccel_device", "/dev/dri/renderD129",
             "-i", input_path,
-            # "-init_hw_device", "qsv=va:/dev/dri/renderD129",
-            "-vf", "hqdn3d=3:3:6:6",
-            "-c:v", "av1_qsv",
-            "-preset", "veryslow",
-            "-global_quality", "25", #the lowest I can go without meaningfully sacrificing quality
+            "-vf", "hqdn3d=3:3:6:6,format=nv12,hwupload",
+            "-c:v", "av1_vaapi",
+            "-global_quality", "30", # found through some experimentation
+            "-low_power", "0",
+            "-profile:v", "0",
             "-c:a", "copy",
             av1_output_path
         ]
