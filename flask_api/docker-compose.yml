@@ -9,6 +9,10 @@ services:
     volumes:
       - /zstorage/surveillance_video:/data/video
     group_add:
-      - '993'
+      - "video"
+      - "render"
     devices:
-      - /dev/dri/renderD129:/dev/dri/renderD129
+      - /dev/dri:/dev/dri
+    environment:
+      - LIBVA_DRIVER_NAME=iHD
+      - LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
