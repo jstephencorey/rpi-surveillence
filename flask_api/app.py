@@ -136,7 +136,7 @@ def upload_clip():
 
     device_id, timestamp_str, timestamp_iso, clip_id, additional_note, motion_group_id = get_video_info(file.filename)
 
-    output_file_name = f"{device_id}_{timestamp_str}_{clip_id}_{additional_note}_{motion_group_id}.mp4"
+    output_file_name = f"{device_id}_{timestamp_str}_{clip_id}_{additional_note}_{motion_group_id}.mkv"
 
     output_path = os.path.join(OUTPUT_DIR, output_file_name)
     logging.info(f"Saving to Output {output_path}")
