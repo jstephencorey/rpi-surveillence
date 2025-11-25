@@ -10,7 +10,6 @@ services:
       - /zstorage/surveillance_video:/data/video
     group_add:
       - "video"
-      - "render"
     devices:
       - /dev/dri:/dev/dri
     environment:
