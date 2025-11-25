@@ -11,7 +11,8 @@ services:
     group_add:
       - "video"
     devices:
-      - /dev/dri:/dev/dri
+      - /dev/dri/card1:/dev/dri/card1
+      - /dev/dri/renderD129:/dev/dri/renderD129
     environment:
       - LIBVA_DRIVER_NAME=iHD
       - LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
