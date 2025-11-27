@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import os, tempfile, subprocess, shutil, logging
+import os, subprocess, shutil, logging
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
@@ -13,20 +13,20 @@ import pytz
 # Load environment variables
 load_dotenv()
 
+# Load secrets from .env
+SECRET_KEY = os.getenv("SECRET_KEY")
+IMMICH_API_KEY = os.getenv("IMMICH_API_KEY")
+IMMICH_UPLOAD_URL = str(os.getenv("IMMICH_UPLOAD_URL"))
 
-OUTPUT_DIR = "/data/video"
-INCOMING_DIR = os.path.join(OUTPUT_DIR, "incoming")
-LOW_QUALITY = "44" #Found through testing to be a as low as I could reasonably go without loosing too much quality
-
+ENCODED_DIR = "/data/video/encoded"
+INCOMING_DIR = "/data/video/incoming"
 
 os.makedirs(INCOMING_DIR, exist_ok=True)
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
+os.makedirs(ENCODED_DIR, exist_ok=True)
 
 # Flask app setup
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 * 1024  # increase if needed, currently 2 GB
-
 
 # Setup logging
 logging.basicConfig(
@@ -38,25 +38,6 @@ logging.basicConfig(
     ]
 )
 
-
-def encode_in_background(input_path, output_path):
-    """Run ffmpeg H.265 NVENC encode asynchronously."""
-    logging.info("Running background encode now")
-    try:
-        subprocess.run([
-            "ffmpeg", "-y",
-            "-hwaccel", "cuda",
-            "-i", input_path,
-            "-c:v", "hevc_nvenc",
-            "-preset", "p7",       # very slow, highest quality
-            "-cq", "28",           # constant quality (lower = higher quality)
-            "-c:a", "copy",         # copy audio
-            output_path
-        ], check=True)
-        os.remove(input_path)
-        logging.info(f"Finished [ENCODED] {output_path}")
-    except subprocess.CalledProcessError as e:
-        logging.warning(f"[ERROR] FFmpeg failed for {input_path}: {e}")
 
 def encode_in_background_av1(input_path, av1_output_path):
     """Run ffmpeg AV1 NVENC encode asynchronously."""
@@ -73,7 +54,7 @@ def encode_in_background_av1(input_path, av1_output_path):
             "-i", input_path,
             "-vf", "hqdn3d=3:3:6:6,format=nv12,hwupload",
             "-c:v", "av1_vaapi",
-            "-global_quality", "30", # found through some experimentation
+            "-global_quality", "30", # Found through testing to be a as low as I could reasonably go without loosing too much quality
             "-low_power", "0",
             "-profile:v", "0",
             "-c:a", "copy",
@@ -87,6 +68,8 @@ def encode_in_background_av1(input_path, av1_output_path):
         logging.debug(result.stdout)
         logging.debug(result.stderr)
         logging.info(f"Finished [ENCODED] {av1_output_path}")
+        # os.remove(input_path) #todo do I need this?
+        return True
     except subprocess.CalledProcessError as e:
         logging.error(f"[ERROR] FFmpeg failed for {input_path}")
         logging.error(f"Return code: {e.returncode}")
@@ -104,6 +87,7 @@ def get_time_from_filename(filename):
     dt = tz.localize(dt)
     return dt.isoformat()
 
+
 def get_video_info(video_filename):
     # output_file_name = f"{DEVICE_ID}_{timestampstr}_{clip_id}_{additional_note}_{motion_group_id}.mp4"
     # Save incoming file
@@ -119,6 +103,45 @@ def get_video_info(video_filename):
     return device_id, timestamp_str, timestamp_iso, clip_id, additional_note, motion_group_id
 
 
+def encode_and_upload(video_filename):
+    incoming_filepath = os.path.join(INCOMING_DIR, video_filename)
+
+    av1_video_filename = video_filename.replace(".mp4", ".mkv")
+    output_path = os.path.join(ENCODED_DIR, av1_video_filename)
+    logging.info(f"Encoding to: {output_path}")
+
+    encode_success = encode_in_background_av1(incoming_filepath, output_path)
+    
+    upload_to_immich(av1_video_filename)
+
+
+def upload_to_immich(video_filename):
+    logging.info(f"Uploading {video_filename} to immich")
+
+    encoded_video_path = os.path.join(ENCODED_DIR, video_filename)
+    
+    device_id, timestamp_str, timestamp_iso, clip_id, additional_note, motion_group_id = get_video_info(video_filename)
+
+    device_asset_id = f"{clip_id}-{additional_note}-{motion_group_id}"
+    try:
+        with open(encoded_video_path, 'rb') as f:
+            headers = {'x-api-key': IMMICH_API_KEY}
+            files = {'assetData': f}
+            data = {
+                'deviceId': device_id,
+                'deviceAssetId': device_asset_id,
+                'fileCreatedAt': timestamp_iso,
+                'fileModifiedAt': timestamp_iso
+            }
+            logging.info(f"Uploading video to Immich with deviceAssetId: {device_asset_id}")
+            response = requests.post(IMMICH_UPLOAD_URL, files=files, data=data, headers=headers)
+
+        logging.info(f"Upload response code: {response.status_code}")
+        os.remove(encoded_video_path)
+    except Exception as e:
+        logging.error("Error during /upload", exc_info=True)
+
+
 @app.route("/upload_clip", methods=["POST"])
 def upload_clip():
     logging.info("Received POST /upload_clip request")
@@ -131,111 +154,23 @@ def upload_clip():
         logging.warning("Empty filename")
         return jsonify({"error": "Empty filename"}), 400
 
-    temp_path = os.path.join(INCOMING_DIR, file.filename)
+    video_filename = file.filename
+    temp_path = os.path.join(INCOMING_DIR, video_filename)
     file.save(temp_path)
-
-    device_id, timestamp_str, timestamp_iso, clip_id, additional_note, motion_group_id = get_video_info(file.filename)
-
-    output_file_name = f"{device_id}_{timestamp_str}_{clip_id}_{additional_note}_{motion_group_id}.mkv"
-
-    output_path = os.path.join(OUTPUT_DIR, output_file_name)
-    logging.info(f"Saving to Output {output_path}")
-    # This is an option that doesn't encode it at all, and will let my home computer do all of that
-    # os.rename(temp_path, output_path)
-    # Spawn encoding in background to encode with h265
-    threading.Thread(target=encode_in_background_av1, args=(temp_path, output_path)).start()
+    
+    threading.Thread(target=encode_and_upload, args=(video_filename)).start()
 
     return jsonify({
-        "status": "uploaded",
+        "status": "saved, ready to encode and upload",
         "saved_to": temp_path,
-        "encoding_to": output_path
     }), 200
 
-
-
-# Load secrets from .env
-SECRET_KEY = os.getenv("SECRET_KEY")
-IMMICH_API_KEY = os.getenv("IMMICH_API_KEY")
-IMMICH_UPLOAD_URL = str(os.getenv("IMMICH_UPLOAD_URL"))
-
-def get_iso8601_zoned_timestamp():
-    tz = pytz.timezone(os.getenv("TIMEZONE", "America/Denver"))  # fallback to Mountain Time
-    now = datetime.now(tz)
-    return now.isoformat()
 
 @app.route('/test', methods=['GET'])
 def test_endpoint():
     logging.info("Received GET /test request")
     return "hello world"
 
-@app.route('/upload', methods=['POST'])
-def receive_images():
-    logging.info("Received POST /upload request")
-    temp_dir = tempfile.mkdtemp()
-    filenames = []
-
-    try:
-        # Expect deviceId in form data
-        logging.info("beginning to process the request")
-        device_id = request.form.get("deviceId")
-        if not device_id:
-            logging.warning("Missing deviceId in form data")
-            return {"status": "error", "message": "Missing deviceId"}, 400
-
-        logging.info(f"Device ID: {device_id}")
-
-        images = request.files.getlist("images")
-        logging.info(f"Number of images received: {len(images)}")
-
-        for i, file in enumerate(images):
-            path = os.path.join(temp_dir, f"frame_{i:03}.jpg")
-            file.save(path)
-            filenames.append(path)
-            logging.debug(f"Saved frame: {path}")
-
-        video_path = os.path.join(temp_dir, "output.mp4")
-        logging.info(f"Generating video at: {video_path}")
-
-        result = subprocess.run([
-            "ffmpeg", "-y",
-            "-framerate", "10",
-            "-i", os.path.join(temp_dir, "frame_%03d.jpg"),
-            "-c:v", "libx265",
-            "-pix_fmt", "yuv420p",
-            video_path
-        ], check=True, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            logging.error(f"ffmpeg failed: {result.stderr}")
-
-        logging.info("Video generation complete")
-
-        # Upload video to Immich
-        with open(video_path, 'rb') as f:
-            headers = {'x-api-key': IMMICH_API_KEY}
-            files = {'assetData': f}
-            timestamp = get_iso8601_zoned_timestamp()
-            device_asset_id = f"{device_id}_{str(uuid.uuid4())}"
-            data = {
-                'deviceId': device_id,
-                'deviceAssetId': device_asset_id,
-                'fileCreatedAt': timestamp,
-                'fileModifiedAt': timestamp
-            }
-            logging.info(f"Uploading video to Immich with deviceAssetId: {device_asset_id}")
-            response = requests.post(IMMICH_UPLOAD_URL, files=files, data=data, headers=headers)
-
-        logging.info(f"Upload response code: {response.status_code}")
-        return {"status": "success", "immich_response": response.json()}, response.status_code
-
-    except Exception as e:
-        logging.error("Error during /upload", exc_info=True)
-        return {"status": "error", "message": str(e)}, 500
-
-    finally:
-        logging.info("Reached the finally chunk of processing the images/video")
-        shutil.rmtree(temp_dir)
-        logging.info(f"Cleaned up temp directory: {temp_dir}")
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
