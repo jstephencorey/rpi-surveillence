@@ -156,7 +156,9 @@ def upload_clip():
 
     video_filename = file.filename
     temp_path = os.path.join(INCOMING_DIR, video_filename)
+    logging.debug(f"Saving the incoming video to {temp_path}")
     file.save(temp_path)
+    logging.debug(f"Video saved.")
     
     threading.Thread(target=encode_and_upload, args=(video_filename,)).start()
 
