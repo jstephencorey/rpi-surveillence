@@ -158,7 +158,7 @@ def upload_clip():
     temp_path = os.path.join(INCOMING_DIR, video_filename)
     file.save(temp_path)
     
-    threading.Thread(target=encode_and_upload, args=(video_filename)).start()
+    threading.Thread(target=encode_and_upload, args=(video_filename,)).start()
 
     return jsonify({
         "status": "saved, ready to encode and upload",
