@@ -1,0 +1,23 @@
+services:
+  surveillance-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5100:8000"
+    env_file:
+      - .env
+    environment:
+      - DATA_DIR=/data/surveillance
+      - LIBVA_DRIVER_NAME=iHD
+      - LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+    restart: unless-stopped
+    volumes:
+      - /zstorage/surveillance_data:/data/surveillance
+    group_add:
+      - "video"
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/renderD129:/dev/dri/renderD129
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/card1:/dev/dri/card1
