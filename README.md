@@ -115,3 +115,4 @@ Rpi:
     Get Encryption set up (and jupyter or something to decrypt.)
 At some point re-set-up everything from scratch on a new rpi to make sure it's all repeatable
 Get physical stuff set up? switch, battery, etc.(3d printing?)
+
